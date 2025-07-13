@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "994764313677",
+    "project_id": "rent-ez-3300",
+    "storage_bucket": "rent-ez-3300.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994764313677:android:05bb853baf3782edc9f804",
+        "android_client_info": {
+          "package_name": "com.example.rent_ez"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAq1nIisseBeWgc-v-QuVUl82-f1eZ0Grc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
