@@ -4,7 +4,9 @@ import 'package:rent_ez/ui/global/common/toast.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
 
 class HouseAddDetails extends StatefulWidget {
-  const HouseAddDetails({super.key});
+  final String ownerId;
+
+  const HouseAddDetails({super.key, required this.ownerId});
 
   @override
   State<HouseAddDetails> createState() => _HouseAddDetailsState();
@@ -16,6 +18,7 @@ class _HouseAddDetailsState extends State<HouseAddDetails> {
   final TextEditingController houseNoController = TextEditingController();
   final TextEditingController roadNoController = TextEditingController();
   final TextEditingController areaDetailsController = TextEditingController();
+  bool isSubmitting = false;
 
   @override
   void dispose() {
@@ -47,115 +50,40 @@ class _HouseAddDetailsState extends State<HouseAddDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
+                  const Center(
                     child: Text(
                       'Provide House Information',
                       style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
                     ),
                   ),
+                  const SizedBox(height: 30),
+
+                  _buildInputField('Description', descriptionController, maxLines: 2),
                   const SizedBox(height: 20),
-
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: TextFormField(
-                      controller: descriptionController,
-                      decoration: InputDecoration(
-                        hintText: 'Description',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 2,
-                    ),
-                  ),
-
+                  _buildInputField('House Rent', houseRentController, keyboardType: TextInputType.number),
                   const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: TextFormField(
-                      controller: houseRentController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        hintText: 'House Rent',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-
+                  _buildInputField('House no.', houseNoController),
                   const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: TextFormField(
-                      controller: houseNoController,
-                      keyboardType: TextInputType.multiline,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: 'House no.',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-
+                  _buildInputField('Road No.', roadNoController, keyboardType: TextInputType.number),
                   const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: TextFormField(
-                      controller: roadNoController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        hintText: 'Road No.',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
+                  _buildInputField('Area Details (e.g., Block, Sector)', areaDetailsController),
 
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: TextFormField(
-                      controller: areaDetailsController,
-                      decoration: InputDecoration(
-                        hintText: 'Area Details',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 40),
                   Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (descriptionController.text.isEmpty ||
-                            houseRentController.text.isEmpty ||
-                            houseNoController.text.isEmpty ||
-                            roadNoController.text.isEmpty ||
-                            areaDetailsController.text.isEmpty) {
-                          showToast(message: "Please fill all fields");
-                          return;
-                        }
-
-                        try {
-                          final details = HouseDetailsModel(
-                            description: descriptionController.text,
-                            houseRent: int.parse(houseRentController.text),
-                            houseNo: houseNoController.text,
-                            roadNo: int.parse(roadNoController.text),
-                            areaDetails: areaDetailsController.text,
-                          );
-
-                          houseAddDetails(details);
-                        } catch (e) {
-                          showToast(message: "Please enter valid numbers for Rent and Road No.");
-                        }
-                      },
+                    child: isSubmitting
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                      onPressed: submitDetails,
                       style: ElevatedButton.styleFrom(
-                        fixedSize: const Size(120, 50),
-                        elevation: 5,
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        fixedSize: const Size(200, 60),
+                        elevation: 10,
                         backgroundColor: Colors.blueGrey,
                         foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.green, width: 2),
                       ),
                       child: const Text(
-                        'Submit',
-                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                        'Submit Details',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -168,37 +96,63 @@ class _HouseAddDetailsState extends State<HouseAddDetails> {
     );
   }
 
-  Future<void> houseAddDetails(HouseDetailsModel details) async {
+  Widget _buildInputField(String hint, TextEditingController controller,
+      {TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          hintText: hint,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.all(15),
+        ),
+      ),
+    );
+  }
+
+  Future<void> submitDetails() async {
+    if (descriptionController.text.isEmpty ||
+        houseRentController.text.isEmpty ||
+        houseNoController.text.isEmpty ||
+        roadNoController.text.isEmpty ||
+        areaDetailsController.text.isEmpty) {
+      showToast(message: "Please fill all fields");
+      return;
+    }
+
+    setState(() => isSubmitting = true);
+
     try {
-      final docUser = FirebaseFirestore.instance.collection('House Add Details').doc();
-      await docUser.set(details.toMap());
-      showToast(message: "Submit Successful");
+      // Parse numerical values
+      final houseRent = int.tryParse(houseRentController.text);
+      final roadNo = int.tryParse(roadNoController.text);
+
+      if (houseRent == null || roadNo == null) {
+        showToast(message: "Invalid number format");
+        return;
+      }
+
+      final details = {
+        'ownerId': widget.ownerId,
+        'description': descriptionController.text,
+        'houseRent': houseRent,
+        'houseNo': houseNoController.text,
+        'roadNo': roadNo,
+        'areaDetails': areaDetailsController.text,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      // Save to Firestore
+      await FirebaseFirestore.instance.collection('House Details').add(details);
+      showToast(message: "Details Submitted Successfully");
+      Navigator.pop(context);  // Return to previous screen
     } catch (e) {
-      showToast(message: 'Some error occurred');
+      showToast(message: "Error: $e");
+    } finally {
+      setState(() => isSubmitting = false);
     }
   }
-}
-
-class HouseDetailsModel {
-  final String description;
-  final int houseRent;
-  final String houseNo;
-  final int roadNo;
-  final String areaDetails;
-
-  HouseDetailsModel({
-    required this.description,
-    required this.houseRent,
-    required this.houseNo,
-    required this.roadNo,
-    required this.areaDetails,
-  });
-
-  Map<String, dynamic> toMap() => {
-    'description': description,
-    'houseRent': houseRent,
-    'houseNo': houseNo,
-    'roadNo': roadNo,
-    'areaDetails': areaDetails,
-  };
 }

@@ -10,67 +10,52 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
-
   @override
   void initState() {
     super.initState();
     goToLogin();
   }
 
-void goToLogin(){
-  Future.delayed(const Duration(seconds:3)).then((value) {
-Navigator.pushAndRemoveUntil(context,
-    MaterialPageRoute(builder: (context) => const LoginScreen()),
-    (route) => false);
-  });
-}
-
+  void goToLogin() {
+    Future.delayed(const Duration(seconds: 3)).then((value) {
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body:BackgroundBody(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text('Welcome',style: TextStyle(
-              fontSize: 40,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-              letterSpacing: 2,
-            ),),
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pushReplacementNamed(context, '/login');
+    });
 
-            Center(
-              child: Image.asset('assets/images/mysylhet.jpg',
-                width:300,
-                height:280 ,
-                fit: BoxFit.cover,
+    return Scaffold(
+      body: BackgroundBody(
+        child: Center(
+            child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/splash.jpg',
+              width: 400,
+              height: 380,
+              fit: BoxFit.cover,
+            ),
+            const Text(
+              '"Easy Rent Easy Life"',
+              style: TextStyle(
+                height: 2,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                fontStyle: FontStyle.italic,
               ),
             ),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text('"Easy Rent Easy Life"',style: TextStyle(
-                  fontSize: 20,
-                  fontWeight:FontWeight.bold,
-                  color: Colors.green,
-                  //height: -2,
-
-                ),)
-              ],
-            )
-
           ],
-        ),
+        )),
       ),
-
-
-
-
     );
   }
 }

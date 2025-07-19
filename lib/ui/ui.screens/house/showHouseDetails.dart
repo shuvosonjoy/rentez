@@ -1,38 +1,38 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:rent_ez/model/shopOwnerModel.dart';
+import 'package:rent_ez/model/houseOwnerModel.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
 
-class ShopDetails extends StatefulWidget {
-  final ShopOwnerModel owner;
+class HouseDetails extends StatefulWidget {
+  final HouseOwnerModel owner;
 
-  const ShopDetails({super.key, required this.owner});
+  const HouseDetails({super.key, required this.owner});
 
   @override
-  State<ShopDetails> createState() => _ShopDetailsState();
+  State<HouseDetails> createState() => _HouseDetailsState();
 }
 
-class _ShopDetailsState extends State<ShopDetails> {
-  Map<String, dynamic>? shopDetails;
+class _HouseDetailsState extends State<HouseDetails> {
+  Map<String, dynamic>? houseDetails;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchShopDetails();
+    _fetchHouseDetails();
   }
 
-  Future<void> _fetchShopDetails() async {
+  Future<void> _fetchHouseDetails() async {
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('Shop Details')
+          .collection('House Details')
           .where('ownerId', isEqualTo: widget.owner.id)
           .limit(1)
           .get();
 
       if (snapshot.docs.isNotEmpty) {
-        setState(() => shopDetails = snapshot.docs.first.data());
+        setState(() => houseDetails = snapshot.docs.first.data());
       }
     } catch (e) {
       print("Error fetching details: $e");
@@ -45,7 +45,7 @@ class _ShopDetailsState extends State<ShopDetails> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shop Details',
+        title: const Text('House Details',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
         centerTitle: true,
         elevation: 0,
@@ -56,15 +56,18 @@ class _ShopDetailsState extends State<ShopDetails> {
         child: SafeArea(
           child: isLoading
               ? const Center(child: CircularProgressIndicator())
-              : shopDetails == null
+              : houseDetails == null
               ? const Center(child: Text('No details found'))
               : SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Image Carousel
                 _buildImageCarousel(),
                 const SizedBox(height: 24),
+
+                // House Info Card
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -75,31 +78,34 @@ class _ShopDetailsState extends State<ShopDetails> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Rent & House No
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildInfoItem(
                               title: 'Monthly Rent',
-                              value: '৳${shopDetails!['shopRent']?.toString() ?? 'N/A'}',
+                              value: '৳${houseDetails!['houseRent']?.toString() ?? 'N/A'}',
                               isHighlighted: true,
                             ),
                             _buildInfoItem(
-                              title: 'Shop No',
-                              value: shopDetails!['shopNo']?.toString() ?? 'N/A',
+                              title: 'House No',
+                              value: houseDetails!['houseNo']?.toString() ?? 'N/A',
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
+
+                        // Road & Area
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildInfoItem(
-                              title: 'Floor',
-                              value: shopDetails!['floor']?.toString() ?? 'N/A',
+                              title: 'Road No',
+                              value: houseDetails!['roadNo']?.toString() ?? 'N/A',
                             ),
                             _buildInfoItem(
-                              title: 'Complex/Market',
-                              value: shopDetails!['complex']?.toString() ?? 'N/A',
+                              title: 'Area',
+                              value: houseDetails!['areaDetails']?.toString() ?? 'N/A',
                             ),
                           ],
                         ),
@@ -108,14 +114,20 @@ class _ShopDetailsState extends State<ShopDetails> {
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                // Description Section
                 _buildSectionTitle('Description'),
                 const SizedBox(height: 8),
                 _buildDescriptionCard(),
                 const SizedBox(height: 24),
+
+                // Owner Information
                 _buildSectionTitle('Owner Information'),
                 const SizedBox(height: 12),
                 _buildOwnerCard(),
                 const SizedBox(height: 20),
+
+                // Contact Button
                 Center(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.phone),
@@ -143,10 +155,11 @@ class _ShopDetailsState extends State<ShopDetails> {
   }
 
   Widget _buildImageCarousel() {
+    // Local asset paths
     final List<String> imagePaths = [
-      'assets/images/shopone.jpg',
-      'assets/images/shoptwo.jpg',
-      'assets/images/shopthree.jpg',
+      'assets/images/houseone.jpg',
+      'assets/images/housetwo.jpg',
+      'assets/images/housethree.jpg',
     ];
 
     return Container(
@@ -179,9 +192,10 @@ class _ShopDetailsState extends State<ShopDetails> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                imagePaths[index],
+              child: Image.asset(  // Changed to Image.asset
+                imagePaths[index],  // Use local path
                 fit: BoxFit.cover,
+                // Remove network-specific builders
               ),
             ),
           );
@@ -189,7 +203,6 @@ class _ShopDetailsState extends State<ShopDetails> {
       ),
     );
   }
-
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
@@ -210,7 +223,7 @@ class _ShopDetailsState extends State<ShopDetails> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Text(
-          shopDetails!['description'] ?? 'No description available',
+          houseDetails!['description'] ?? 'No description available',
           textAlign: TextAlign.justify,
           style: const TextStyle(fontSize: 16, height: 1.5),
         ),

@@ -4,7 +4,9 @@ import 'package:rent_ez/ui/global/common/toast.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
 
 class ShopAddDetails extends StatefulWidget {
-  const ShopAddDetails({super.key});
+  final String ownerId;
+
+  const ShopAddDetails({super.key, required this.ownerId});
 
   @override
   State<ShopAddDetails> createState() => _ShopAddDetailsState();
@@ -14,16 +16,17 @@ class _ShopAddDetailsState extends State<ShopAddDetails> {
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController shopRentController = TextEditingController();
   final TextEditingController shopNoController = TextEditingController();
-  final TextEditingController roadNoController = TextEditingController();
-  final TextEditingController areaDetailsController = TextEditingController();
+  final TextEditingController floorController = TextEditingController();
+  final TextEditingController complexController = TextEditingController();
+  bool isSubmitting = false;
 
   @override
   void dispose() {
     descriptionController.dispose();
     shopRentController.dispose();
     shopNoController.dispose();
-    roadNoController.dispose();
-    areaDetailsController.dispose();
+    floorController.dispose();
+    complexController.dispose();
     super.dispose();
   }
 
@@ -32,7 +35,7 @@ class _ShopAddDetailsState extends State<ShopAddDetails> {
     return Scaffold(
       appBar: AppBar(
         flexibleSpace: Image.asset(
-          'assets/images/Add Details.png',
+          'assets/images/Add Details.png', // Update to shop image if available
           fit: BoxFit.cover,
         ),
         toolbarHeight: 100,
@@ -47,43 +50,40 @@ class _ShopAddDetailsState extends State<ShopAddDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
+                  const Center(
                     child: Text(
                       'Provide Shop Information',
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
                     ),
                   ),
+                  const SizedBox(height: 30),
+
+                  _buildInputField('Description', descriptionController, maxLines: 2),
                   const SizedBox(height: 20),
-                  _buildTextField(descriptionController, 'Description'),
+                  _buildInputField('Shop Rent', shopRentController, keyboardType: TextInputType.number),
                   const SizedBox(height: 20),
-                  _buildNumberField(shopRentController, 'Shop Rent'),
+                  _buildInputField('Shop No.', shopNoController),
                   const SizedBox(height: 20),
-                  _buildTextField(shopNoController, 'Shop no.'),
+                  _buildInputField('Floor', floorController),
                   const SizedBox(height: 20),
-                  _buildNumberField(roadNoController, 'Road No.'),
-                  const SizedBox(height: 20),
-                  _buildTextField(areaDetailsController, 'Area Details'),
-                  const SizedBox(height: 10),
+                  _buildInputField('Complex/Market Name', complexController),
+
+                  const SizedBox(height: 40),
                   Center(
-                    child: ElevatedButton(
-                      onPressed: _submitForm,
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
+                    child: isSubmitting
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                      onPressed: submitDetails,
                       style: ElevatedButton.styleFrom(
-                        fixedSize: const Size(100, 50),
-                        elevation: 5,
-                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        fixedSize: const Size(200, 60),
+                        elevation: 10,
+                        backgroundColor: Colors.blueGrey,
                         foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.black26, width: 2),
+                      ),
+                      child: const Text(
+                        'Submit Details',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -96,88 +96,60 @@ class _ShopAddDetailsState extends State<ShopAddDetails> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint) {
+  Widget _buildInputField(String hint, TextEditingController controller,
+      {TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
     return Padding(
-      padding: const EdgeInsets.all(5),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
         controller: controller,
-        decoration: InputDecoration(hintText: hint),
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          hintText: hint,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.all(15),
+        ),
       ),
     );
   }
 
-  Widget _buildNumberField(TextEditingController controller, String hint) {
-    return Padding(
-      padding: const EdgeInsets.all(5),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(hintText: hint),
-      ),
-    );
-  }
-
-  void _submitForm() {
+  Future<void> submitDetails() async {
     if (descriptionController.text.isEmpty ||
         shopRentController.text.isEmpty ||
         shopNoController.text.isEmpty ||
-        roadNoController.text.isEmpty ||
-        areaDetailsController.text.isEmpty) {
-      showToast(message: 'Please fill all fields');
+        floorController.text.isEmpty ||
+        complexController.text.isEmpty) {
+      showToast(message: "Please fill all fields");
       return;
     }
 
-    final shopRent = int.tryParse(shopRentController.text);
-    final roadNo = int.tryParse(roadNoController.text);
+    setState(() => isSubmitting = true);
 
-    if (shopRent == null || roadNo == null) {
-      showToast(message: 'Please enter valid numbers for Shop Rent and Road No.');
-      return;
-    }
-
-    final user = User(
-      description: descriptionController.text.trim(),
-      shopRent: shopRent,
-      shopNo: shopNoController.text.trim(),
-      roadNo: roadNo,
-      areaDetails: areaDetailsController.text.trim(),
-    );
-
-    shopAddDetails(user);
-  }
-
-  Future<void> shopAddDetails(User user) async {
     try {
-      final docUser = FirebaseFirestore.instance.collection('Shop Add Details').doc();
-      final shop = user.toShop();
-      await docUser.set(shop);
-      showToast(message: "Submit Successful");
+      final shopRent = int.tryParse(shopRentController.text);
+
+      if (shopRent == null) {
+        showToast(message: "Invalid rent amount");
+        return;
+      }
+
+      final details = {
+        'ownerId': widget.ownerId,
+        'description': descriptionController.text,
+        'shopRent': shopRent,
+        'shopNo': shopNoController.text,
+        'floor': floorController.text,
+        'complex': complexController.text,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      await FirebaseFirestore.instance.collection('Shop Details').add(details);
+      showToast(message: "Details Submitted Successfully");
+      Navigator.pop(context);
     } catch (e) {
-      showToast(message: 'Some error occurred');
+      showToast(message: "Error: $e");
+    } finally {
+      setState(() => isSubmitting = false);
     }
   }
-}
-
-class User {
-  final String description;
-  final int shopRent;
-  final String shopNo;
-  final int roadNo;
-  final String areaDetails;
-
-  User({
-    required this.description,
-    required this.shopRent,
-    required this.shopNo,
-    required this.roadNo,
-    required this.areaDetails,
-  });
-
-  Map<String, dynamic> toShop() => {
-    'description': description,
-    'shopRent': shopRent,
-    'shopNo': shopNo,
-    'roadNo': roadNo,
-    'areaDetails': areaDetails,
-  };
 }

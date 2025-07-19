@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:rent_ez/ui/ui.screens/house/house_details.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:rent_ez/model/houseOwnerModel.dart';
+import 'package:rent_ez/ui/ui.screens/house/showHouseDetails.dart';
 import 'package:rent_ez/ui/ui.screens/house/house_owner.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
 
 class HouseScreen extends StatefulWidget {
   const HouseScreen({super.key});
@@ -12,20 +14,58 @@ class HouseScreen extends StatefulWidget {
 }
 
 class _HouseScreenState extends State<HouseScreen> {
-  String? selectedCity;
-  String? selectedArea;
+  String? selectedArea = 'All'; // Default to 'All' areas
+  List<HouseOwnerModel> houseOwnerList = [];
+  bool isLoading = false;
 
-  final List<String> cityItems = [
-    'Barishal', 'Chattogram', 'Dhaka', 'Khulna', 'Mymensingh', 'Rajshahi', 'Sylhet', 'Rangpur',
-  ];
-
+// Add 'All' option at beginning of areas
   final List<String> areaItems = [
-    'Ambarkhana', 'Arambagh', 'Bagbari', 'Barutkhana', 'Bondar', 'Chowhatta', 'Chowkidekhi', 'Dariapara', 'Dorga Gate', 'Electric Supply', 'Fazil Chisth', 'Hawapara',
-    'Housing Estate', 'Jollarpar', 'Kazir Bazar', 'Kazitula', 'Korer Para', 'Kumar para', 'Kuar par', 'Lama Bazar', 'Londoni Road', 'Laladigir par', 'Mezor Tila', 'Mirabazar',
-    'Munshi Para', 'Mirboxtula', 'Mirer Maidan', 'Modina Market', 'Noyasorok', 'Osmani Medical', 'Pathantula', 'Payra', 'Pir Moholla', 'Rikabi Bazar', 'Subidbazar', 'Sekhghat',
-    'Shahi Eidgah', 'Shibgonj', 'Subhanighat', 'Tilaghar', 'Uposhohar A Block', 'Uposhohar B Block', 'Uposhohar C Block', 'Uposhohar D Block', 'Uposhohar E Block',
-    'Uposhohar G Block', 'Uposhohar H Block', 'Uposhohar Plaza', 'Uposhohor', 'Zindabazar',
+    'All',
+    'Ambarkhana', 'Arambagh', 'Bagbari', 'Barutkhana', 'Bondar', 'Chowhatta', 'Chowkidekhi',
+    'Dariapara', 'Dorga Gate', 'Electric Supply', 'Fazil Chisth', 'Hawapara', 'Housing Estate',
+    'Jollarpar', 'Kazir Bazar', 'Kazitula', 'Korer Para', 'Kumar para', 'Kuar par', 'Lama Bazar',
+    'Londoni Road', 'Laladigir par', 'Mezor Tila', 'Mirabazar', 'Munshi Para', 'Mirboxtula',
+    'Mirer Maidan', 'Modina Market', 'Noyasorok', 'Osmani Medical', 'Pathantula', 'Payra',
+    'Pir Moholla', 'Rikabi Bazar', 'Subidbazar', 'Sekhghat', 'Shahi Eidgah', 'Shibgonj',
+    'Subhanighat', 'Tilaghar', 'Uposhohar A Block', 'Uposhohar B Block', 'Uposhohar C Block',
+    'Uposhohar D Block', 'Uposhohar E Block', 'Uposhohar G Block', 'Uposhohar H Block',
+    'Uposhohar Plaza', 'Uposhohor', 'Zindabazar',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchHouseOwners(); // Fetch all houses on initialization
+  }
+
+  Future<void> fetchHouseOwners() async {
+    setState(() => isLoading = true);
+
+    try {
+      QuerySnapshot snapshot;
+      if (selectedArea == 'All') {
+// Fetch all houses
+        snapshot =
+            await FirebaseFirestore.instance.collection('House Owner').get();
+      } else {
+// Fetch houses by specific area
+        snapshot = await FirebaseFirestore.instance
+            .collection('House Owner')
+            .where('address', isEqualTo: selectedArea)
+            .get();
+      }
+
+      final owners = snapshot.docs.map((doc) {
+        return HouseOwnerModel.fromFirestore(doc);
+      }).toList();
+
+      setState(() => houseOwnerList = owners);
+    } catch (e) {
+      print("Error fetching data: $e");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,38 +86,55 @@ class _HouseScreenState extends State<HouseScreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  /// Dropdown & House Owner Button
+                  /// Area Dropdown & House Owner Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      /// Area Dropdown
                       DropdownButtonHideUnderline(
                         child: DropdownButton2<String>(
                           isExpanded: true,
                           hint: const Text(
-                            'Select Your City',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                            'Select Area',
+                            style: TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w900),
                           ),
-                          items: cityItems.map((String item) => DropdownMenuItem<String>(
-                            value: item,
-                            child: Text(item, style: const TextStyle(fontSize: 15)),
-                          )).toList(),
-                          value: selectedCity,
+                          items: areaItems
+                              .map((String item) => DropdownMenuItem<String>(
+                                    value: item,
+                                    child: Text(
+                                      item,
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: item == 'All'
+                                              ? FontWeight.bold
+                                              : FontWeight.normal),
+                                    ),
+                                  ))
+                              .toList(),
+                          value: selectedArea,
                           onChanged: (String? value) {
-                            setState(() => selectedCity = value);
+                            setState(() => selectedArea = value);
+                            fetchHouseOwners();
                           },
                           buttonStyleData: const ButtonStyleData(
                             padding: EdgeInsets.symmetric(horizontal: 16),
                             height: 80,
-                            width: 150,
+                            width: 200,
                           ),
-                          menuItemStyleData: const MenuItemStyleData(height: 40),
+                          menuItemStyleData:
+                              const MenuItemStyleData(height: 40),
                         ),
                       ),
+
+                      /// House Owner Button
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(
-                            builder: (context) => const HouseOwner(),
-                          ));
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const HouseOwner(),
+                              ));
                         },
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.all(15.0),
@@ -85,11 +142,13 @@ class _HouseScreenState extends State<HouseScreen> {
                           elevation: 20,
                           backgroundColor: Colors.amber,
                           foregroundColor: Colors.black,
-                          side: const BorderSide(color: Colors.black26, width: 3),
+                          side:
+                              const BorderSide(color: Colors.black26, width: 3),
                         ),
                         child: const Text(
                           'House Owner',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -97,40 +156,8 @@ class _HouseScreenState extends State<HouseScreen> {
 
                   const SizedBox(height: 20),
 
-                  /// Area Dropdown
-                  DropdownButtonHideUnderline(
-                    child: DropdownButton2<String>(
-                      isExpanded: true,
-                      hint: const Text(
-                        'Select Your Area',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
-                      ),
-                      items: areaItems.map((String item) => DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(item, style: const TextStyle(fontSize: 14)),
-                      )).toList(),
-                      value: selectedArea,
-                      onChanged: (String? value) {
-                        setState(() => selectedArea = value);
-                      },
-                      buttonStyleData: const ButtonStyleData(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        height: 80,
-                        width: 200,
-                      ),
-                      menuItemStyleData: const MenuItemStyleData(height: 40),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    'View All',
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900, color: Colors.black),
-                  ),
-
-                  const SizedBox(height: 10),
-                  houseListView,
+                  /// House List View
+                  buildHouseListView(),
                 ],
               ),
             ),
@@ -140,51 +167,85 @@ class _HouseScreenState extends State<HouseScreen> {
     );
   }
 
-  SizedBox get houseListView {
-    return SizedBox(
-      child: ListView.separated(
-        itemCount: 5,
-        primary: false,
-        shrinkWrap: true,
-        itemBuilder: (context, index) {
-          return SizedBox(
-            height: 150,
-            child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              elevation: 10,
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Image.asset('assets/images/Building.png', width: 120),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
+  Widget buildHouseListView() {
+    if (isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 40),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (houseOwnerList.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Center(
+          child: Text(selectedArea == 'All'
+              ? 'No houses available'
+              : 'No houses found in $selectedArea'),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: houseOwnerList.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final house = houseOwnerList[index];
+        return SizedBox(
+          height: 150,
+          child: Card(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            elevation: 10,
+            child: Row(
+              children: [
+// House Image
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Image.asset('assets/images/Building.png', width: 120),
+                ),
+
+// House Details
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 20),
                         Row(
-                          children: const [
-                            Icon(Icons.location_on, color: Colors.blue),
-                            SizedBox(width: 4),
-                            Text('Subidbazer, Sylhet', overflow: TextOverflow.ellipsis),
+                          children: [
+                            const Icon(Icons.location_on, color: Colors.blue),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                house.address,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 5),
                         Row(
-                          children: const [
-                            Icon(Icons.phone, color: Colors.grey),
-                            SizedBox(width: 4),
-                            Text('01782163624', overflow: TextOverflow.ellipsis),
+                          children: [
+                            const Icon(Icons.phone, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(house.phone),
                           ],
                         ),
                         const SizedBox(height: 5),
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(
-                              builder: (context) => const HouseDetails(),
-                            ));
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      HouseDetails(owner: house),
+                                ));
                           },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -192,7 +253,8 @@ class _HouseScreenState extends State<HouseScreen> {
                             elevation: 5,
                             backgroundColor: Colors.blueGrey,
                             foregroundColor: Colors.white,
-                            side: const BorderSide(color: Colors.black26, width: 2),
+                            side: const BorderSide(
+                                color: Colors.black26, width: 2),
                           ),
                           child: const Text(
                             'Details',
@@ -202,13 +264,12 @@ class _HouseScreenState extends State<HouseScreen> {
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-      ),
+          ),
+        );
+      },
     );
   }
 }

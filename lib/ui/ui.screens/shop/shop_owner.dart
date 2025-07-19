@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:rent_ez/ui/global/common/toast.dart';
-import 'package:rent_ez/ui/ui.screens/shop/shop_add_details.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
+import 'package:rent_ez/ui/ui.screens/shop/shop_add_details.dart';
 
 class ShopOwner extends StatefulWidget {
   const ShopOwner({super.key});
@@ -12,22 +12,19 @@ class ShopOwner extends StatefulWidget {
 }
 
 class _ShopOwnerState extends State<ShopOwner> {
-  final TextEditingController addressController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  String? selectedArea;
 
-  @override
-  void dispose() {
-    addressController.dispose();
-    phoneController.dispose();
-    super.dispose();
-  }
+  final List<String> areaItems = [
+    'Subidbazar', 'Zindabazar', 'Ambarkhana', 'Tilaghar', 'Dorga Gate', 'Pathantula',
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         flexibleSpace: Image.asset(
-          'assets/images/Shop Owner.png',
+          'assets/images/Shop Owner.png', // Update image
           fit: BoxFit.cover,
         ),
         toolbarHeight: 100,
@@ -35,146 +32,52 @@ class _ShopOwnerState extends State<ShopOwner> {
         backgroundColor: Colors.grey,
       ),
       body: BackgroundBody(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Stack(
-                    children: [
-                      SizedBox(
-                        width: 200,
-                        height: 80,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(100),
-                          // You might want to add an image or placeholder here
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(60),
-                            color: Colors.indigo,
-                          ),
-                          child: const Icon(
-                            Icons.cloud_upload,
-                            color: Colors.white70,
-                            size: 50,
-                          ),
-                        ),
-                      ),
-                    ],
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const Text(
+                  'Area:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: selectedArea,
+                  items: areaItems.map((area) => DropdownMenuItem(
+                    value: area,
+                    child: Text(area),
+                  )).toList(),
+                  onChanged: (value) => setState(() => selectedArea = value),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 15),
                   ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Text(
-                      'Upload a Picture',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 50),
-                  Text(
-                    'Title :',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.w900,
-                    ),
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: submitForm,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    backgroundColor: Colors.blueGrey,
+                    foregroundColor: Colors.white,
+                    elevation: 10,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: TextFormField(
-                      controller: addressController,
-                      decoration: const InputDecoration(
-                        hintText: 'Address',
-                      ),
-                    ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: TextFormField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        hintText: 'Phone',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (addressController.text.isEmpty ||
-                            phoneController.text.isEmpty) {
-                          showToast(message: "Please fill all fields");
-                          return;
-                        }
-                        final phoneNumber = int.tryParse(phoneController.text);
-                        if (phoneNumber == null) {
-                          showToast(message: "Please enter a valid phone number");
-                          return;
-                        }
-                        final user = User(
-                          address: addressController.text.trim(),
-                          phone: phoneNumber,
-                        );
-                        shopOwner(user);
-                      },
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        fixedSize: const Size(100, 50),
-                        elevation: 5,
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.black26, width: 2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 50),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ShopAddDetails(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Add Details',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        fixedSize: const Size(100, 50),
-                        elevation: 5,
-                        backgroundColor: Colors.blueGrey,
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.black26, width: 2),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -182,31 +85,33 @@ class _ShopOwnerState extends State<ShopOwner> {
     );
   }
 
-  Future<void> shopOwner(User user) async {
+  void submitForm() async {
+    if (selectedArea == null || phoneController.text.isEmpty) {
+      showToast(message: 'All fields are required!');
+      return;
+    }
+
     try {
-      final docUser = FirebaseFirestore.instance.collection('Shop Owner').doc();
-      final shop = user.toShop();
+      DocumentReference docRef = await FirebaseFirestore.instance
+          .collection('Shop Owner')
+          .add({
+        'address': selectedArea!,
+        'phone': phoneController.text,
+      });
 
-      await docUser.set(shop);
+      showToast(message: 'Submitted Successfully');
 
-      showToast(message: "Submit Successful");
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ShopAddDetails(ownerId: docRef.id),
+        ),
+      );
+
+      phoneController.clear();
+      setState(() => selectedArea = null);
     } catch (e) {
-      showToast(message: 'Some error occurred');
+      showToast(message: 'Error: $e');
     }
   }
-}
-
-class User {
-  final String address;
-  final int phone;
-
-  User({
-    required this.address,
-    required this.phone,
-  });
-
-  Map<String, dynamic> toShop() => {
-    'address': address,
-    'phone': phone,
-  };
 }
