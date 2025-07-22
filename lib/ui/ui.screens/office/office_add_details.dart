@@ -4,7 +4,9 @@ import 'package:rent_ez/ui/global/common/toast.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
 
 class OfficeAddDetails extends StatefulWidget {
-  const OfficeAddDetails({super.key});
+  final String ownerId;
+
+  const OfficeAddDetails({super.key, required this.ownerId});
 
   @override
   State<OfficeAddDetails> createState() => _OfficeAddDetailsState();
@@ -12,16 +14,19 @@ class OfficeAddDetails extends StatefulWidget {
 
 class _OfficeAddDetailsState extends State<OfficeAddDetails> {
   final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController officeRentController = TextEditingController();
-  final TextEditingController roadNoController = TextEditingController();
-  final TextEditingController areaDetailsController = TextEditingController();
+  final TextEditingController monthlyRentController = TextEditingController();
+  final TextEditingController officeNoController = TextEditingController();
+  final TextEditingController floorController = TextEditingController();
+  final TextEditingController buildingNameController = TextEditingController();
+  bool isSubmitting = false;
 
   @override
   void dispose() {
     descriptionController.dispose();
-    officeRentController.dispose();
-    roadNoController.dispose();
-    areaDetailsController.dispose();
+    monthlyRentController.dispose();
+    officeNoController.dispose();
+    floorController.dispose();
+    buildingNameController.dispose();
     super.dispose();
   }
 
@@ -45,55 +50,40 @@ class _OfficeAddDetailsState extends State<OfficeAddDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
+                  const Center(
                     child: Text(
                       'Provide Office Information',
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  _buildTextField(descriptionController, 'Description'),
-                  const SizedBox(height: 20),
-                  _buildTextField(officeRentController, 'Office Rent',
-                      inputType: TextInputType.number),
-                  const SizedBox(height: 20),
-                  _buildTextField(roadNoController, 'Road No.',
-                      inputType: TextInputType.number),
-                  const SizedBox(height: 20),
-                  _buildTextField(areaDetailsController, 'Area Details'),
                   const SizedBox(height: 30),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_validateInputs()) {
-                          final user = OfficeDetailsUser(
-                            description: descriptionController.text.trim(),
-                            officeRent:
-                            int.parse(officeRentController.text.trim()),
-                            roadNo: int.parse(roadNoController.text.trim()),
-                            areaDetails: areaDetailsController.text.trim(),
-                          );
 
-                          _officeAddDetails(user);
-                        }
-                      },
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
+                  _buildInputField('Description', descriptionController, maxLines: 3),
+                  const SizedBox(height: 20),
+                  _buildInputField('Monthly Rent', monthlyRentController, keyboardType: TextInputType.number),
+                  const SizedBox(height: 20),
+                  _buildInputField('Office No.', officeNoController),
+                  const SizedBox(height: 20),
+                  _buildInputField('Floor', floorController),
+                  const SizedBox(height: 20),
+                  _buildInputField('Building Name', buildingNameController),
+
+                  const SizedBox(height: 40),
+                  Center(
+                    child: isSubmitting
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                      onPressed: submitDetails,
                       style: ElevatedButton.styleFrom(
-                        fixedSize: const Size(100, 50),
-                        elevation: 5,
-                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        fixedSize: const Size(200, 60),
+                        elevation: 10,
+                        backgroundColor: Colors.blueGrey,
                         foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.black26, width: 2),
+                      ),
+                      child: const Text(
+                        'Submit Details',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -106,66 +96,60 @@ class _OfficeAddDetailsState extends State<OfficeAddDetails> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hintText,
-      {TextInputType inputType = TextInputType.text}) {
+  Widget _buildInputField(String hint, TextEditingController controller,
+      {TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
     return Padding(
-      padding: const EdgeInsets.all(5),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
         controller: controller,
-        keyboardType: inputType,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
         decoration: InputDecoration(
-          hintText: hintText,
+          hintText: hint,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.all(15),
         ),
       ),
     );
   }
 
-  bool _validateInputs() {
+  Future<void> submitDetails() async {
     if (descriptionController.text.isEmpty ||
-        officeRentController.text.isEmpty ||
-        roadNoController.text.isEmpty ||
-        areaDetailsController.text.isEmpty) {
-      showToast(message: 'Please fill in all fields');
-      return false;
+        monthlyRentController.text.isEmpty ||
+        officeNoController.text.isEmpty ||
+        floorController.text.isEmpty ||
+        buildingNameController.text.isEmpty) {
+      showToast(message: "Please fill all fields");
+      return;
     }
 
-    if (int.tryParse(officeRentController.text) == null ||
-        int.tryParse(roadNoController.text) == null) {
-      showToast(message: 'Rent and Road No. must be numbers');
-      return false;
-    }
+    setState(() => isSubmitting = true);
 
-    return true;
-  }
-
-  Future<void> _officeAddDetails(OfficeDetailsUser user) async {
     try {
-      final doc = FirebaseFirestore.instance.collection('Office Add Details').doc();
-      await doc.set(user.toMap());
-      showToast(message: 'Submit Successful');
+      final monthlyRent = int.tryParse(monthlyRentController.text);
+
+      if (monthlyRent == null) {
+        showToast(message: "Invalid rent amount");
+        return;
+      }
+
+      final details = {
+        'ownerId': widget.ownerId,
+        'description': descriptionController.text,
+        'monthlyRent': monthlyRent,
+        'officeNo': officeNoController.text,
+        'floor': floorController.text,
+        'buildingName': buildingNameController.text,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      await FirebaseFirestore.instance.collection('Office Details').add(details);
+      showToast(message: "Details Submitted Successfully");
+      Navigator.pop(context);
     } catch (e) {
-      showToast(message: 'Some error occurred');
+      showToast(message: "Error: $e");
+    } finally {
+      setState(() => isSubmitting = false);
     }
   }
-}
-
-class OfficeDetailsUser {
-  final String description;
-  final int officeRent;
-  final int roadNo;
-  final String areaDetails;
-
-  OfficeDetailsUser({
-    required this.description,
-    required this.officeRent,
-    required this.roadNo,
-    required this.areaDetails,
-  });
-
-  Map<String, dynamic> toMap() => {
-    'description': description,
-    'officeRent': officeRent,
-    'roadNo': roadNo,
-    'areaDetails': areaDetails,
-  };
 }

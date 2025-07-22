@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:rent_ez/model/transportOwnerModel.dart';
 import 'package:rent_ez/ui/ui.screens/transport/transport_details.dart';
 import 'package:rent_ez/ui/ui.screens/transport/transport_owner.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
 
 class TransportScreen extends StatefulWidget {
   const TransportScreen({super.key});
@@ -12,72 +14,56 @@ class TransportScreen extends StatefulWidget {
 }
 
 class _TransportScreenState extends State<TransportScreen> {
-  String? selectedCity;
-  String? selectedArea;
+  String? selectedArea = 'All';
+  List<TransportOwnerModel> transportOwnerList = [];
+  bool isLoading = false;
 
-  final List<String> transportitems = [
-    'Barishal',
-    'Chattogram',
-    'Dhaka',
-    'Khulna',
-    'Mymensingh',
-    'Rajshahi',
-    'Sylhet',
-    'Rangpur',
+  final List<String> areaItems = [
+    'All',
+    'Ambarkhana', 'Arambagh', 'Bagbari', 'Barutkhana', 'Bondar', 'Chowhatta',
+    'Chowkidekhi', 'Dariapara', 'Dorga Gate', 'Electric Supply', 'Fazil Chisth',
+    'Hawapara', 'Housing Estate', 'Jollarpar', 'Kazir Bazar', 'Kazitula',
+    'Korer Para', 'Kumar para', 'Kuar par', 'Lama Bazar', 'Londoni Road',
+    'Laladigir par', 'Mezor Tila', 'Mirabazar', 'Munshi Para', 'Mirboxtula',
+    'Mirer Maidan', 'Modina Market', 'Noyasorok', 'Osmani Medical', 'Pathantula',
+    'Payra', 'Pir Moholla', 'Rikabi Bazar', 'Subidbazar', 'Sekhghat',
+    'Shahi Eidgah', 'Shibgonj', 'Subhanighat', 'Tilaghar', 'Uposhohar A Block',
+    'Uposhohar B Block', 'Uposhohar C Block', 'Uposhohar D Block',
+    'Uposhohar E Block', 'Uposhohar G Block', 'Uposhohar H Block',
+    'Uposhohar Plaza', 'Uposhohor', 'Zindabazar',
   ];
 
-  final List<String> transportitems1 = [
-    'Ambarkhana',
-    'Arambagh',
-    'Bagbari',
-    'Barutkhana',
-    'Bondar',
-    'Chowhatta',
-    'Chowkidekhi',
-    'Dariapara',
-    'Dorga Gate',
-    'Electric Supply',
-    'Fazil Chisth',
-    'Hawapara',
-    'Housing Estate',
-    'Jollarpar',
-    'Kazir Bazar',
-    'Kazitula',
-    'Korer Para',
-    'Kumar para',
-    'Kuar par',
-    'Lama Bazar',
-    'Londoni Road',
-    'Laladigir par',
-    'Mezor Tila',
-    'Mirabazar',
-    'Munshi Para',
-    'Mirboxtula',
-    'Mirer Maidan',
-    'Modina Market',
-    'Noyasorok',
-    'Osmani Medical',
-    'Pathantula',
-    'Payra',
-    'Pir Moholla',
-    'Rikabi Bazar',
-    'Subidbazar',
-    'Sekhghat',
-    'Shahi Eidgah',
-    'Shibgonj',
-    'Subhanighat',
-    'Tilaghar',
-    'Uposhohar A Block',
-    'Uposhohar B Block',
-    'Uposhohar C Block',
-    'Uposhohar D Block',
-    'Uposhohar E Block',
-    'Uposhohar G Block',
-    'Uposhohar H Block',
-    'Uposhohar Plaza',
-    'Uposhohor',
-    'Zindabazar',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchTransportOwners();
+  }
+
+  Future<void> fetchTransportOwners() async {
+    setState(() => isLoading = true);
+
+    try {
+      QuerySnapshot snapshot;
+      if (selectedArea == 'All') {
+        snapshot = await FirebaseFirestore.instance.collection('Transport Owner').get();
+      } else {
+        snapshot = await FirebaseFirestore.instance
+            .collection('Transport Owner')
+            .where('address', isEqualTo: selectedArea)
+            .get();
+      }
+
+      final owners = snapshot.docs.map((doc) {
+        return TransportOwnerModel.fromFirestore(doc);
+      }).toList();
+
+      setState(() => transportOwnerList = owners);
+    } catch (e) {
+      print("Error fetching data: $e");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,135 +84,71 @@ class _TransportScreenState extends State<TransportScreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  // City selection and Transport Owner button row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       DropdownButtonHideUnderline(
                         child: DropdownButton2<String>(
                           isExpanded: true,
-                          hint: Text(
-                            'Select Your City',
+                          hint: const Text(
+                            'Select Area',
                             style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                              color: Theme.of(context).hintColor,
-                            ),
+                                fontSize: 15, fontWeight: FontWeight.w900),
                           ),
-                          items: transportitems
-                              .map(
-                                (item) => DropdownMenuItem<String>(
-                              value: item,
-                              child: Text(
-                                item,
-                                style: const TextStyle(fontSize: 15),
-                              ),
+                          items: areaItems
+                              .map((String item) => DropdownMenuItem<String>(
+                            value: item,
+                            child: Text(
+                              item,
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: item == 'All'
+                                      ? FontWeight.bold
+                                      : FontWeight.normal),
                             ),
-                          )
+                          ))
                               .toList(),
-                          value: selectedCity,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedCity = value;
-                            });
+                          value: selectedArea,
+                          onChanged: (String? value) {
+                            setState(() => selectedArea = value);
+                            fetchTransportOwners();
                           },
                           buttonStyleData: const ButtonStyleData(
                             padding: EdgeInsets.symmetric(horizontal: 16),
                             height: 80,
-                            width: 150,
+                            width: 200,
                           ),
-                          menuItemStyleData: const MenuItemStyleData(height: 40),
+                          menuItemStyleData:
+                          const MenuItemStyleData(height: 40),
                         ),
                       ),
                       ElevatedButton(
                         onPressed: () {
                           Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const TransportOwner(),
-                            ),
-                          );
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const TransportOwner(),
+                              ));
                         },
-                        child: const Text(
-                          'Transport Owner',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.all(15.0),
-                          fixedSize: const Size(100, 70),
+                          fixedSize: const Size(80, 70),
                           elevation: 20,
                           backgroundColor: Colors.amber,
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.black26, width: 3),
+                          foregroundColor: Colors.black,
+                          side:
+                          const BorderSide(color: Colors.black26, width: 3),
+                        ),
+                        child: const Text(
+                          'Vehicle Owner',
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 10),
-
-                  // Area selection row
-                  Row(
-                    children: [
-                      DropdownButtonHideUnderline(
-                        child: DropdownButton2<String>(
-                          isExpanded: true,
-                          hint: Text(
-                            'Select Your Area',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                              color: Theme.of(context).hintColor,
-                            ),
-                          ),
-                          items: transportitems1
-                              .map(
-                                (item) => DropdownMenuItem<String>(
-                              value: item,
-                              child: Text(
-                                item,
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ),
-                          )
-                              .toList(),
-                          value: selectedArea,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedArea = value;
-                            });
-                          },
-                          buttonStyleData: const ButtonStyleData(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            height: 80,
-                            width: 150,
-                          ),
-                          menuItemStyleData: const MenuItemStyleData(height: 40),
-                        ),
-                      ),
-                    ],
-                  ),
-
                   const SizedBox(height: 20),
-
-                  // Title text
-                  const Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // List of transport items
-                  transportList,
+                  buildTransportListView(),
                 ],
               ),
             ),
@@ -236,104 +158,106 @@ class _TransportScreenState extends State<TransportScreen> {
     );
   }
 
-  SizedBox get transportList {
-    return SizedBox(
-      // Adjust height as needed or wrap with Flexible if inside a Column with other flexible widgets
-      child: ListView.separated(
-        itemCount: 5,
-        primary: false,
-        shrinkWrap: true,
-        scrollDirection: Axis.vertical,
-        itemBuilder: (context, index) {
-          return SizedBox(
-            height: 150,
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              elevation: 10,
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      bottomLeft: Radius.circular(20),
-                    ),
-                    child: Image.asset(
-                      'assets/images/Transport.png',
-                      width: 120,
-                      height: 150,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 15.0),
+  Widget buildTransportListView() {
+    if (isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 40),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (transportOwnerList.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Center(
+          child: Text(selectedArea == 'All'
+              ? 'No vehicles available'
+              : 'No vehicles found in $selectedArea'),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: transportOwnerList.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final transport = transportOwnerList[index];
+        return SizedBox(
+          height: 150,
+          child: Card(
+            shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            elevation: 10,
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Image.asset('assets/images/Transport.png', width: 120),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const SizedBox(height: 20),
                         Row(
-                          children: const [
-                            Icon(Icons.location_on, color: Colors.blue),
-                            SizedBox(width: 5),
-                            Text(
-                              'Subidbazer, Sylhet',
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 16),
+                          children: [
+                            const Icon(Icons.location_on, color: Colors.blue),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                transport.address,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 5),
                         Row(
-                          children: const [
-                            Icon(Icons.phone, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Text(
-                              '01782163624',
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 16),
-                            ),
+                          children: [
+                            const Icon(Icons.phone, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(transport.phone),
                           ],
                         ),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 5),
                         ElevatedButton(
                           onPressed: () {
                             Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const TransportDetails(),
-                              ),
-                            );
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      TransportDetails(owner: transport),
+                                ));
                           },
-                          child: const Text(
-                            'Details',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
                             fixedSize: const Size(90, 35),
                             elevation: 5,
                             backgroundColor: Colors.blueGrey,
                             foregroundColor: Colors.white,
-                            side: const BorderSide(color: Colors.black26, width: 2),
+                            side: const BorderSide(
+                                color: Colors.black26, width: 2),
+                          ),
+                          child: const Text(
+                            'Details',
+                            style: TextStyle(fontWeight: FontWeight.w900),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
-        separatorBuilder: (_, __) {
-          return const SizedBox(height: 10);
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

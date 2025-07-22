@@ -4,7 +4,9 @@ import 'package:rent_ez/ui/global/common/toast.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
 
 class GarageAddDetails extends StatefulWidget {
-  const GarageAddDetails({super.key});
+  final String ownerId;
+
+  const GarageAddDetails({super.key, required this.ownerId});
 
   @override
   State<GarageAddDetails> createState() => _GarageAddDetailsState();
@@ -12,18 +14,22 @@ class GarageAddDetails extends StatefulWidget {
 
 class _GarageAddDetailsState extends State<GarageAddDetails> {
   final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController garageRentController = TextEditingController();
-  final TextEditingController garageNoController = TextEditingController();
-  final TextEditingController roadNoController = TextEditingController();
-  final TextEditingController areaDetailsController = TextEditingController();
+  final TextEditingController monthlyRentController = TextEditingController();
+  final TextEditingController sizeController = TextEditingController();
+  final TextEditingController vehicleCapacityController = TextEditingController();
+  final TextEditingController locationDetailsController = TextEditingController();
+  String? selectedGarageType;
+  bool isSubmitting = false;
+
+  final List<String> garageTypes = ['Residential', 'Commercial', 'Covered', 'Open'];
 
   @override
   void dispose() {
     descriptionController.dispose();
-    garageRentController.dispose();
-    garageNoController.dispose();
-    roadNoController.dispose();
-    areaDetailsController.dispose();
+    monthlyRentController.dispose();
+    sizeController.dispose();
+    vehicleCapacityController.dispose();
+    locationDetailsController.dispose();
     super.dispose();
   }
 
@@ -47,43 +53,60 @@ class _GarageAddDetailsState extends State<GarageAddDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
+                  const Center(
                     child: Text(
                       'Provide Garage Information',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
                     ),
                   ),
+                  const SizedBox(height: 30),
+
+                  _buildInputField('Description', descriptionController, maxLines: 2),
                   const SizedBox(height: 20),
-                  _buildTextField(descriptionController, 'Description'),
+                  _buildInputField('Monthly Rent', monthlyRentController, keyboardType: TextInputType.number),
                   const SizedBox(height: 20),
-                  _buildTextField(garageRentController, 'Garage Rent', isNumber: true),
+                  _buildInputField('Size (e.g., 20x20 ft)', sizeController),
                   const SizedBox(height: 20),
-                  _buildTextField(garageNoController, 'Garage no.'),
+                  _buildInputField('Vehicle Capacity', vehicleCapacityController, keyboardType: TextInputType.number),
                   const SizedBox(height: 20),
-                  _buildTextField(roadNoController, 'Road No.', isNumber: true),
+                  _buildInputField('Location Details', locationDetailsController),
                   const SizedBox(height: 20),
-                  _buildTextField(areaDetailsController, 'Area Details'),
-                  const SizedBox(height: 20),
+
+                  // Garage Type Dropdown
+                  const Text(
+                    'Garage Type:',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: selectedGarageType,
+                    items: garageTypes.map((type) => DropdownMenuItem(
+                      value: type,
+                      child: Text(type),
+                    )).toList(),
+                    onChanged: (value) => setState(() => selectedGarageType = value),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
                   Center(
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
+                    child: isSubmitting
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                      onPressed: submitDetails,
                       style: ElevatedButton.styleFrom(
-                        fixedSize: const Size(100, 50),
-                        elevation: 5,
-                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        fixedSize: const Size(200, 60),
+                        elevation: 10,
+                        backgroundColor: Colors.blueGrey,
                         foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.black26, width: 2),
+                      ),
+                      child: const Text(
+                        'Submit Details',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -96,80 +119,63 @@ class _GarageAddDetailsState extends State<GarageAddDetails> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint,
-      {bool isNumber = false}) {
+  Widget _buildInputField(String hint, TextEditingController controller,
+      {TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
     return Padding(
-      padding: const EdgeInsets.all(5),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
         controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        decoration: InputDecoration(hintText: hint),
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          hintText: hint,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.all(15),
+        ),
       ),
     );
   }
 
-  void _submit() {
-    // Basic validation
+  Future<void> submitDetails() async {
     if (descriptionController.text.isEmpty ||
-        garageRentController.text.isEmpty ||
-        garageNoController.text.isEmpty ||
-        roadNoController.text.isEmpty ||
-        areaDetailsController.text.isEmpty) {
+        monthlyRentController.text.isEmpty ||
+        sizeController.text.isEmpty ||
+        vehicleCapacityController.text.isEmpty ||
+        locationDetailsController.text.isEmpty ||
+        selectedGarageType == null) {
       showToast(message: "Please fill all fields");
       return;
     }
 
-    final garageRent = int.tryParse(garageRentController.text);
-    final roadNo = int.tryParse(roadNoController.text);
+    setState(() => isSubmitting = true);
 
-    if (garageRent == null || roadNo == null) {
-      showToast(message: "Please enter valid numbers for rent and road no.");
-      return;
-    }
-
-    final user = User(
-      description: descriptionController.text,
-      garageRent: garageRent,
-      garageNo: garageNoController.text,
-      roadNo: roadNo,
-      areaDetails: areaDetailsController.text,
-    );
-
-    garageAddDetails(user);
-  }
-
-  Future<void> garageAddDetails(User user) async {
     try {
-      final docUser =
-      FirebaseFirestore.instance.collection('Garage Add Details').doc();
-      await docUser.set(user.toGarage());
-      showToast(message: "Submit Successful");
+      final monthlyRent = int.tryParse(monthlyRentController.text);
+      final vehicleCapacity = int.tryParse(vehicleCapacityController.text);
+
+      if (monthlyRent == null || vehicleCapacity == null) {
+        showToast(message: "Invalid number format");
+        return;
+      }
+
+      final details = {
+        'ownerId': widget.ownerId,
+        'description': descriptionController.text,
+        'monthlyRent': monthlyRent,
+        'size': sizeController.text,
+        'vehicleCapacity': vehicleCapacity,
+        'locationDetails': locationDetailsController.text,
+        'garageType': selectedGarageType,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      await FirebaseFirestore.instance.collection('Garage Details').add(details);
+      showToast(message: "Details Submitted Successfully");
+      Navigator.pop(context);
     } catch (e) {
-      showToast(message: 'Some error occurred');
+      showToast(message: "Error: $e");
+    } finally {
+      setState(() => isSubmitting = false);
     }
   }
-}
-
-class User {
-  final String description;
-  final int garageRent;
-  final String garageNo;
-  final int roadNo;
-  final String areaDetails;
-
-  User({
-    required this.description,
-    required this.garageRent,
-    required this.garageNo,
-    required this.roadNo,
-    required this.areaDetails,
-  });
-
-  Map<String, dynamic> toGarage() => {
-    'description': description,
-    'garageRent': garageRent,
-    'garageNo': garageNo,
-    'roadNo': roadNo,
-    'areaDetails': areaDetails,
-  };
 }

@@ -4,7 +4,9 @@ import 'package:rent_ez/ui/global/common/toast.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
 
 class TransportAddDetails extends StatefulWidget {
-  const TransportAddDetails({super.key});
+  final String ownerId;
+
+  const TransportAddDetails({super.key, required this.ownerId});
 
   @override
   State<TransportAddDetails> createState() => _TransportAddDetailsState();
@@ -12,16 +14,23 @@ class TransportAddDetails extends StatefulWidget {
 
 class _TransportAddDetailsState extends State<TransportAddDetails> {
   final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController transportRentController = TextEditingController();
-  final TextEditingController transportNoController = TextEditingController();
-  final TextEditingController areaDetailsController = TextEditingController();
+  final TextEditingController dailyRentController = TextEditingController();
+  final TextEditingController vehicleNumberController = TextEditingController();
+  final TextEditingController modelController = TextEditingController();
+  String? selectedVehicleType;
+  bool isSubmitting = false;
+
+  final List<String> vehicleTypes = [
+    'Car', 'Motorcycle', 'Scooter', 'Bicycle',
+    'Truck', 'Van', 'Bus', 'Boat', 'Other'
+  ];
 
   @override
   void dispose() {
     descriptionController.dispose();
-    transportRentController.dispose();
-    transportNoController.dispose();
-    areaDetailsController.dispose();
+    dailyRentController.dispose();
+    vehicleNumberController.dispose();
+    modelController.dispose();
     super.dispose();
   }
 
@@ -45,90 +54,58 @@ class _TransportAddDetailsState extends State<TransportAddDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
+                  const Center(
                     child: Text(
-                      'Provide Transport Information',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      'Provide Vehicle Information',
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Vehicle Type Dropdown
+                  const Text(
+                    'Vehicle Type:',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: selectedVehicleType,
+                    items: vehicleTypes.map((type) => DropdownMenuItem(
+                      value: type,
+                      child: Text(type),
+                    )).toList(),
+                    onChanged: (value) => setState(() => selectedVehicleType = value),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: TextFormField(
-                      controller: descriptionController,
-                      decoration: const InputDecoration(hintText: 'Description'),
-                    ),
-                  ),
+
+                  _buildInputField('Description', descriptionController, maxLines: 2),
                   const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: TextFormField(
-                      controller: transportRentController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(hintText: 'Transport Rent'),
-                    ),
-                  ),
+                  _buildInputField('Daily Rent', dailyRentController, keyboardType: TextInputType.number),
                   const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: TextFormField(
-                      controller: transportNoController,
-                      decoration: const InputDecoration(hintText: 'Transport no.'),
-                    ),
-                  ),
+                  _buildInputField('Vehicle Number', vehicleNumberController),
                   const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: TextFormField(
-                      controller: areaDetailsController,
-                      decoration: const InputDecoration(hintText: 'Area Details'),
-                    ),
-                  ),
-                  const SizedBox(height: 5),
+                  _buildInputField('Model (e.g., Honda Civic 2020)', modelController),
+
+                  const SizedBox(height: 40),
                   Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Simple input validation
-                        if (descriptionController.text.isEmpty ||
-                            transportRentController.text.isEmpty ||
-                            transportNoController.text.isEmpty ||
-                            areaDetailsController.text.isEmpty) {
-                          showToast(message: "Please fill all fields");
-                          return;
-                        }
-
-                        final rent = int.tryParse(transportRentController.text);
-                        if (rent == null) {
-                          showToast(message: "Please enter a valid number for rent");
-                          return;
-                        }
-
-                        final user = User(
-                          description: descriptionController.text.trim(),
-                          transportRent: rent,
-                          transportNo: transportNoController.text.trim(),
-                          areaDetails: areaDetailsController.text.trim(),
-                        );
-
-                        transportAddDetails(user);
-                      },
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
+                    child: isSubmitting
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                      onPressed: submitDetails,
                       style: ElevatedButton.styleFrom(
-                        fixedSize: const Size(100, 50),
-                        elevation: 5,
-                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        fixedSize: const Size(200, 60),
+                        elevation: 10,
+                        backgroundColor: Colors.blueGrey,
                         foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.black26, width: 2),
+                      ),
+                      child: const Text(
+                        'Submit Details',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -141,37 +118,60 @@ class _TransportAddDetailsState extends State<TransportAddDetails> {
     );
   }
 
-  Future<void> transportAddDetails(User user) async {
+  Widget _buildInputField(String hint, TextEditingController controller,
+      {TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          hintText: hint,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.all(15),
+        ),
+      ),
+    );
+  }
+
+  Future<void> submitDetails() async {
+    if (descriptionController.text.isEmpty ||
+        dailyRentController.text.isEmpty ||
+        vehicleNumberController.text.isEmpty ||
+        modelController.text.isEmpty ||
+        selectedVehicleType == null) {
+      showToast(message: "Please fill all fields");
+      return;
+    }
+
+    setState(() => isSubmitting = true);
+
     try {
-      final docUser = FirebaseFirestore.instance.collection('Transport Add Details').doc();
+      final dailyRent = int.tryParse(dailyRentController.text);
 
-      await docUser.set(user.toTransport());
+      if (dailyRent == null) {
+        showToast(message: "Invalid rent amount");
+        return;
+      }
 
-      showToast(message: "Submit Successful");
+      final details = {
+        'ownerId': widget.ownerId,
+        'description': descriptionController.text,
+        'dailyRent': dailyRent,
+        'vehicleNumber': vehicleNumberController.text,
+        'model': modelController.text,
+        'vehicleType': selectedVehicleType,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      await FirebaseFirestore.instance.collection('Transport Details').add(details);
+      showToast(message: "Details Submitted Successfully");
+      Navigator.pop(context);
     } catch (e) {
-      showToast(message: 'Some error occurred');
-      debugPrint('Error saving transport add details: $e');
+      showToast(message: "Error: $e");
+    } finally {
+      setState(() => isSubmitting = false);
     }
   }
-}
-
-class User {
-  final String description;
-  final String transportNo;
-  final int transportRent;
-  final String areaDetails;
-
-  User({
-    required this.description,
-    required this.transportRent,
-    required this.transportNo,
-    required this.areaDetails,
-  });
-
-  Map<String, dynamic> toTransport() => {
-    'description': description,
-    'transportRent': transportRent,   // Fixed: changed key from 'garageRent' to 'transportRent'
-    'transportNo': transportNo,       // Fixed: changed key from 'garageNo' to 'transportNo'
-    'areaDetails': areaDetails,
-  };
 }

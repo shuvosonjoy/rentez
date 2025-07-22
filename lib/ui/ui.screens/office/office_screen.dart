@@ -1,5 +1,7 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:rent_ez/model/officeOwnerModel.dart';
 import 'package:rent_ez/ui/ui.screens/office/office_details.dart';
 import 'package:rent_ez/ui/ui.screens/office/office_owner.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
@@ -12,20 +14,56 @@ class OfficeScreen extends StatefulWidget {
 }
 
 class _OfficeScreenState extends State<OfficeScreen> {
-  String? selectedValue;
-  final List<String> officeitems = [
-    'Barishal', 'Chattogram', 'Dhaka', 'Khulna',
-    'Mymensingh', 'Rajshahi', 'Sylhet', 'Rangpur',
+  String? selectedArea = 'All';
+  List<OfficeOwnerModel> officeOwnerList = [];
+  bool isLoading = false;
+
+  final List<String> areaItems = [
+    'All',
+    'Ambarkhana', 'Arambagh', 'Bagbari', 'Barutkhana', 'Bondar', 'Chowhatta',
+    'Chowkidekhi', 'Dariapara', 'Dorga Gate', 'Electric Supply', 'Fazil Chisth',
+    'Hawapara', 'Housing Estate', 'Jollarpar', 'Kazir Bazar', 'Kazitula',
+    'Korer Para', 'Kumar para', 'Kuar par', 'Lama Bazar', 'Londoni Road',
+    'Laladigir par', 'Mezor Tila', 'Mirabazar', 'Munshi Para', 'Mirboxtula',
+    'Mirer Maidan', 'Modina Market', 'Noyasorok', 'Osmani Medical', 'Pathantula',
+    'Payra', 'Pir Moholla', 'Rikabi Bazar', 'Subidbazar', 'Sekhghat',
+    'Shahi Eidgah', 'Shibgonj', 'Subhanighat', 'Tilaghar', 'Uposhohar A Block',
+    'Uposhohar B Block', 'Uposhohar C Block', 'Uposhohar D Block',
+    'Uposhohar E Block', 'Uposhohar G Block', 'Uposhohar H Block',
+    'Uposhohar Plaza', 'Uposhohor', 'Zindabazar',
   ];
 
-  final List<String> officeitems1 = [
-    'Ambarkhana', 'Arambagh', 'Bagbari', 'Barutkhana', 'Bondar', 'Chowhatta', 'Chowkidekhi', 'Dariapara', 'Dorga Gate', 'Electric Supply',
-    'Fazil Chisth', 'Hawapara', 'Housing Estate', 'Jollarpar', 'Kazir Bazar', 'Kazitula', 'Korer Para', 'Kumar para', 'Kuar par',
-    'Lama Bazar', 'Londoni Road', 'Laladigir par', 'Mezor Tila', 'Mirabazar', 'Munshi Para', 'Mirboxtula', 'Mirer Maidan', 'Modina Market',
-    'Noyasorok', 'Osmani Medical', 'Pathantula', 'Payra', 'Pir Moholla', 'Rikabi Bazar', 'Subidbazar', 'Sekhghat', 'Shahi Eidgah',
-    'Shibgonj', 'Subhanighat', 'Tilaghar', 'Uposhohar A Block', 'Uposhohar B Block', 'Uposhohar C Block', 'Uposhohar D Block',
-    'Uposhohar E Block', 'Uposhohar G Block', 'Uposhohar H Block', 'Uposhohar Plaza', 'Uposhohor', 'Zindabazar',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchOfficeOwners();
+  }
+
+  Future<void> fetchOfficeOwners() async {
+    setState(() => isLoading = true);
+
+    try {
+      QuerySnapshot snapshot;
+      if (selectedArea == 'All') {
+        snapshot = await FirebaseFirestore.instance.collection('Office Owner').get();
+      } else {
+        snapshot = await FirebaseFirestore.instance
+            .collection('Office Owner')
+            .where('address', isEqualTo: selectedArea)
+            .get();
+      }
+
+      final owners = snapshot.docs.map((doc) {
+        return OfficeOwnerModel.fromFirestore(doc);
+      }).toList();
+
+      setState(() => officeOwnerList = owners);
+    } catch (e) {
+      print("Error fetching data: $e");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,121 +82,74 @@ class _OfficeScreenState extends State<OfficeScreen> {
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: SingleChildScrollView(
-              child: SizedBox(
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        DropdownButtonHideUnderline(
-                          child: DropdownButton2<String>(
-                            isExpanded: true,
-                            hint: Text(
-                              'Select Your City',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w900,
-                                color: Theme.of(context).hintColor,
-                              ),
-                            ),
-                            items: officeitems
-                                .map((String item) => DropdownMenuItem<String>(
-                              value: item,
-                              child: Text(item, style: const TextStyle(fontSize: 15)),
-                            ))
-                                .toList(),
-                            value: selectedValue,
-                            onChanged: (String? value) {
-                              setState(() {
-                                selectedValue = value;
-                              });
-                            },
-                            buttonStyleData: const ButtonStyleData(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              height: 80,
-                              width: 150,
-                            ),
-                            menuItemStyleData: const MenuItemStyleData(height: 40),
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const OfficeOwner()),
-                            );
-                          },
-                          child: const Text(
-                            'Office Owner',
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      DropdownButtonHideUnderline(
+                        child: DropdownButton2<String>(
+                          isExpanded: true,
+                          hint: const Text(
+                            'Select Area',
                             style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
+                                fontSize: 15, fontWeight: FontWeight.w900),
                           ),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.all(15.0),
-                            fixedSize: const Size(80, 70),
-                            elevation: 20,
-                            backgroundColor: Colors.amber,
-                            foregroundColor: Colors.white,
-                            side: const BorderSide(color: Colors.black26, width: 3),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        DropdownButtonHideUnderline(
-                          child: DropdownButton2<String>(
-                            isExpanded: true,
-                            hint: Text(
-                              'Select Your Area',
+                          items: areaItems
+                              .map((String item) => DropdownMenuItem<String>(
+                            value: item,
+                            child: Text(
+                              item,
                               style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w900,
-                                color: Theme.of(context).hintColor,
-                              ),
+                                  fontSize: 14,
+                                  fontWeight: item == 'All'
+                                      ? FontWeight.bold
+                                      : FontWeight.normal),
                             ),
-                            items: officeitems1
-                                .map((String item) => DropdownMenuItem<String>(
-                              value: item,
-                              child: Text(item, style: const TextStyle(fontSize: 14)),
-                            ))
-                                .toList(),
-                            value: selectedValue,
-                            onChanged: (String? value) {
-                              setState(() {
-                                selectedValue = value;
-                              });
-                            },
-                            buttonStyleData: const ButtonStyleData(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              height: 80,
-                              width: 150,
-                            ),
-                            menuItemStyleData: const MenuItemStyleData(height: 40),
+                          ))
+                              .toList(),
+                          value: selectedArea,
+                          onChanged: (String? value) {
+                            setState(() => selectedArea = value);
+                            fetchOfficeOwners();
+                          },
+                          buttonStyleData: const ButtonStyleData(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            height: 80,
+                            width: 200,
                           ),
+                          menuItemStyleData:
+                          const MenuItemStyleData(height: 40),
                         ),
-                      ],
-                    ),
-                    Column(
-                      children: const [
-                        SizedBox(height: 10),
-                        Text(
-                          'View All',
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const OfficeOwner(),
+                              ));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.all(15.0),
+                          fixedSize: const Size(80, 70),
+                          elevation: 20,
+                          backgroundColor: Colors.amber,
+                          foregroundColor: Colors.black,
+                          side:
+                          const BorderSide(color: Colors.black26, width: 3),
+                        ),
+                        child: const Text(
+                          'Office Owner',
                           style: TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black,
-                          ),
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    officeList,
-                  ],
-                ),
+                              fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  buildOfficeListView(),
+                ],
               ),
             ),
           ),
@@ -167,81 +158,106 @@ class _OfficeScreenState extends State<OfficeScreen> {
     );
   }
 
-  SizedBox get officeList {
-    return SizedBox(
-      child: ListView.separated(
-        itemCount: 5,
-        primary: false,
-        shrinkWrap: true,
-        scrollDirection: Axis.vertical,
-        itemBuilder: (context, index) {
-          return SizedBox(
-            height: 150,
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              elevation: 10,
-              child: Row(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Image(
-                      image: AssetImage('assets/images/Office.png'),
-                      width: 120,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
+  Widget buildOfficeListView() {
+    if (isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 40),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (officeOwnerList.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Center(
+          child: Text(selectedArea == 'All'
+              ? 'No offices available'
+              : 'No offices found in $selectedArea'),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: officeOwnerList.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final office = officeOwnerList[index];
+        return SizedBox(
+          height: 150,
+          child: Card(
+            shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            elevation: 10,
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Image.asset('assets/images/Office.png', width: 120),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 20),
                         Row(
-                          children: const [
-                            Icon(Icons.location_on, color: Colors.blue),
-                            SizedBox(width: 5),
-                            Text('Subidbazer, Sylhet', overflow: TextOverflow.ellipsis),
+                          children: [
+                            const Icon(Icons.location_on, color: Colors.blue),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                office.address,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 5),
                         Row(
-                          children: const [
-                            Icon(Icons.phone, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Text('01782163624', overflow: TextOverflow.ellipsis),
+                          children: [
+                            const Icon(Icons.phone, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(office.phone),
                           ],
                         ),
                         const SizedBox(height: 5),
                         ElevatedButton(
-                          onPressed: null, // Will be overridden below
-                          child: Text(
-                            'Details',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      OfficeDetails(owner: office),
+                                ));
+                          },
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.all(5.0),
-                            fixedSize: const Size(90, 30),
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            fixedSize: const Size(90, 35),
                             elevation: 5,
                             backgroundColor: Colors.blueGrey,
                             foregroundColor: Colors.white,
-                            side: const BorderSide(color: Colors.black26, width: 2),
+                            side: const BorderSide(
+                                color: Colors.black26, width: 2),
+                          ),
+                          child: const Text(
+                            'Details',
+                            style: TextStyle(fontWeight: FontWeight.w900),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-      ),
+          ),
+        );
+      },
     );
   }
 }

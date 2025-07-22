@@ -18,25 +18,24 @@ class _ShopScreenState extends State<ShopScreen> {
   List<ShopOwnerModel> shopOwnerList = [];
   bool isLoading = false;
 
+  // Add 'All' option at beginning of areas
   final List<String> areaItems = [
     'All',
-    'Ambarkhana', 'Arambagh', 'Bagbari', 'Barutkhana', 'Bondar', 'Chowhatta',
-    'Chowkidekhi', 'Dariapara', 'Dorga Gate', 'Electric Supply', 'Fazil Chisth',
-    'Hawapara', 'Housing Estate', 'Jollarpar', 'Kazir Bazar', 'Kazitula',
-    'Korer Para', 'Kumar para', 'Kuar par', 'Lama Bazar', 'Londoni Road',
-    'Laladigir par', 'Mezor Tila', 'Mirabazar', 'Munshi Para', 'Mirboxtula',
-    'Mirer Maidan', 'Modina Market', 'Noyasorok', 'Osmani Medical', 'Pathantula',
-    'Payra', 'Pir Moholla', 'Rikabi Bazar', 'Subidbazar', 'Sekhghat',
-    'Shahi Eidgah', 'Shibgonj', 'Subhanighat', 'Tilaghar', 'Uposhohar A Block',
-    'Uposhohar B Block', 'Uposhohar C Block', 'Uposhohar D Block',
-    'Uposhohar E Block', 'Uposhohar G Block', 'Uposhohar H Block',
+    'Ambarkhana', 'Arambagh', 'Bagbari', 'Barutkhana', 'Bondar', 'Chowhatta', 'Chowkidekhi',
+    'Dariapara', 'Dorga Gate', 'Electric Supply', 'Fazil Chisth', 'Hawapara', 'Housing Estate',
+    'Jollarpar', 'Kazir Bazar', 'Kazitula', 'Korer Para', 'Kumar para', 'Kuar par', 'Lama Bazar',
+    'Londoni Road', 'Laladigir par', 'Mezor Tila', 'Mirabazar', 'Munshi Para', 'Mirboxtula',
+    'Mirer Maidan', 'Modina Market', 'Noyasorok', 'Osmani Medical', 'Pathantula', 'Payra',
+    'Pir Moholla', 'Rikabi Bazar', 'Subidbazar', 'Sekhghat', 'Shahi Eidgah', 'Shibgonj',
+    'Subhanighat', 'Tilaghar', 'Uposhohar A Block', 'Uposhohar B Block', 'Uposhohar C Block',
+    'Uposhohar D Block', 'Uposhohar E Block', 'Uposhohar G Block', 'Uposhohar H Block',
     'Uposhohar Plaza', 'Uposhohor', 'Zindabazar',
   ];
 
   @override
   void initState() {
     super.initState();
-    fetchShopOwners();
+    fetchShopOwners(); // Fetch all shops on initialization
   }
 
   Future<void> fetchShopOwners() async {
@@ -45,8 +44,10 @@ class _ShopScreenState extends State<ShopScreen> {
     try {
       QuerySnapshot snapshot;
       if (selectedArea == 'All') {
+        // Fetch all shops
         snapshot = await FirebaseFirestore.instance.collection('Shop Owner').get();
       } else {
+        // Fetch shops by specific area
         snapshot = await FirebaseFirestore.instance
             .collection('Shop Owner')
             .where('address', isEqualTo: selectedArea)
@@ -70,7 +71,7 @@ class _ShopScreenState extends State<ShopScreen> {
     return Scaffold(
       appBar: AppBar(
         flexibleSpace: Image.asset(
-          'assets/images/Shop.png', // Update image
+          'assets/images/Shop.png',
           fit: BoxFit.cover,
         ),
         toolbarHeight: 100,
@@ -84,9 +85,11 @@ class _ShopScreenState extends State<ShopScreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
+                  /// Area Dropdown & Shop Owner Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      /// Area Dropdown
                       DropdownButtonHideUnderline(
                         child: DropdownButton2<String>(
                           isExpanded: true,
@@ -122,6 +125,8 @@ class _ShopScreenState extends State<ShopScreen> {
                           const MenuItemStyleData(height: 40),
                         ),
                       ),
+
+                      /// Shop Owner Button
                       ElevatedButton(
                         onPressed: () {
                           Navigator.push(
@@ -147,7 +152,10 @@ class _ShopScreenState extends State<ShopScreen> {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 20),
+
+                  /// Shop List View
                   buildShopListView(),
                 ],
               ),
@@ -194,10 +202,13 @@ class _ShopScreenState extends State<ShopScreen> {
             elevation: 10,
             child: Row(
               children: [
+                // Shop Image
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Image.asset('assets/images/Shop.png', width: 120), // Update image
+                  child: Image.asset('assets/images/Shop.png', width: 120),
                 ),
+
+                // Shop Details
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(2.0),
