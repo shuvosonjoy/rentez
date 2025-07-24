@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:rent_ez/ui/global/common/toast.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
 
@@ -21,6 +24,9 @@ class _GarageAddDetailsState extends State<GarageAddDetails> {
   String? selectedGarageType;
   bool isSubmitting = false;
 
+  List<File> selectedImages = [];
+  bool isUploadingImages = false;
+
   final List<String> garageTypes = ['Residential', 'Commercial', 'Covered', 'Open'];
 
   @override
@@ -31,6 +37,46 @@ class _GarageAddDetailsState extends State<GarageAddDetails> {
     vehicleCapacityController.dispose();
     locationDetailsController.dispose();
     super.dispose();
+  }
+
+  Future<void> pickImages() async {
+    try {
+      final pickedFiles = await ImagePicker().pickMultiImage(
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (pickedFiles != null && pickedFiles.isNotEmpty) {
+        setState(() {
+          selectedImages.addAll(pickedFiles.map((file) => File(file.path)));
+        });
+      }
+    } catch (e) {
+      showToast(message: "Image picker error: $e");
+    }
+  }
+
+  Future<List<String>> uploadImages() async {
+    List<String> imageUrls = [];
+    setState(() => isUploadingImages = true);
+
+    try {
+      for (var image in selectedImages) {
+        String fileName = 'garage_${DateTime.now().millisecondsSinceEpoch}_${image.path.split('/').last}';
+        Reference storageRef = FirebaseStorage.instance.ref().child('garage_images/$fileName');
+        UploadTask uploadTask = storageRef.putFile(image);
+        TaskSnapshot snapshot = await uploadTask;
+        String downloadUrl = await snapshot.ref.getDownloadURL();
+        imageUrls.add(downloadUrl);
+      }
+      return imageUrls;
+    } catch (e) {
+      showToast(message: "Upload failed: $e");
+      return [];
+    } finally {
+      setState(() => isUploadingImages = false);
+    }
   }
 
   @override
@@ -60,6 +106,10 @@ class _GarageAddDetailsState extends State<GarageAddDetails> {
                     ),
                   ),
                   const SizedBox(height: 30),
+
+                  // Image upload section
+                  _buildImageUploadSection(),
+                  const SizedBox(height: 20),
 
                   _buildInputField('Description', descriptionController, maxLines: 2),
                   const SizedBox(height: 20),
@@ -93,7 +143,7 @@ class _GarageAddDetailsState extends State<GarageAddDetails> {
 
                   const SizedBox(height: 40),
                   Center(
-                    child: isSubmitting
+                    child: (isSubmitting || isUploadingImages)
                         ? const CircularProgressIndicator()
                         : ElevatedButton(
                       onPressed: submitDetails,
@@ -116,6 +166,55 @@ class _GarageAddDetailsState extends State<GarageAddDetails> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildImageUploadSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Garage Images:',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+
+        // Image picker button
+        ElevatedButton.icon(
+          onPressed: pickImages,
+          icon: const Icon(Icons.add_photo_alternate),
+          label: const Text('Select Images'),
+        ),
+
+        const SizedBox(height: 10),
+
+        // Preview selected images
+        if (selectedImages.isNotEmpty)
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: selectedImages.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  child: Image.file(
+                    selectedImages[index],
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              },
+            ),
+          ),
+
+        if (isUploadingImages)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: LinearProgressIndicator(),
+          ),
+      ],
     );
   }
 
@@ -147,6 +246,11 @@ class _GarageAddDetailsState extends State<GarageAddDetails> {
       return;
     }
 
+    if (selectedImages.isEmpty) {
+      showToast(message: "Please select at least one image");
+      return;
+    }
+
     setState(() => isSubmitting = true);
 
     try {
@@ -158,6 +262,14 @@ class _GarageAddDetailsState extends State<GarageAddDetails> {
         return;
       }
 
+      // Upload images first
+      List<String> imageUrls = await uploadImages();
+
+      if (imageUrls.isEmpty) {
+        showToast(message: "Failed to upload images");
+        return;
+      }
+
       final details = {
         'ownerId': widget.ownerId,
         'description': descriptionController.text,
@@ -166,6 +278,7 @@ class _GarageAddDetailsState extends State<GarageAddDetails> {
         'vehicleCapacity': vehicleCapacity,
         'locationDetails': locationDetailsController.text,
         'garageType': selectedGarageType,
+        'imageUrls': imageUrls, // Store image URLs
         'createdAt': FieldValue.serverTimestamp(),
       };
 

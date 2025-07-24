@@ -63,8 +63,11 @@ class _OfficeDetailsState extends State<OfficeDetails> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Image Carousel
                 _buildImageCarousel(),
                 const SizedBox(height: 24),
+
+                // Office Info Card
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -75,6 +78,7 @@ class _OfficeDetailsState extends State<OfficeDetails> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Rent & Office No
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -90,6 +94,8 @@ class _OfficeDetailsState extends State<OfficeDetails> {
                           ],
                         ),
                         const SizedBox(height: 16),
+
+                        // Floor & Building
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -108,14 +114,20 @@ class _OfficeDetailsState extends State<OfficeDetails> {
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                // Description Section
                 _buildSectionTitle('Description'),
                 const SizedBox(height: 8),
                 _buildDescriptionCard(),
                 const SizedBox(height: 24),
+
+                // Owner Information
                 _buildSectionTitle('Owner Information'),
                 const SizedBox(height: 12),
                 _buildOwnerCard(),
                 const SizedBox(height: 20),
+
+                // Contact Button
                 Center(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.phone),
@@ -143,11 +155,21 @@ class _OfficeDetailsState extends State<OfficeDetails> {
   }
 
   Widget _buildImageCarousel() {
-    final List<String> imagePaths = [
-      'assets/images/officeone.jpg',
-      'assets/images/officetwo.jpg',
-      'assets/images/officethree.jpg',
-    ];
+    // Get image URLs from Firestore
+    List<String> imageUrls = (officeDetails?['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [];
+
+    if (imageUrls.isEmpty) {
+      return Container(
+        height: 240,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: Colors.grey[200],
+        ),
+        child: const Center(
+          child: Icon(Icons.business, size: 60, color: Colors.grey),
+        ),
+      );
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -162,7 +184,7 @@ class _OfficeDetailsState extends State<OfficeDetails> {
         ],
       ),
       child: CarouselSlider.builder(
-        itemCount: imagePaths.length,
+        itemCount: imageUrls.length,
         options: CarouselOptions(
           height: 240,
           autoPlay: true,
@@ -179,9 +201,22 @@ class _OfficeDetailsState extends State<OfficeDetails> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                imagePaths[index],
+              child: Image.network(
+                imageUrls[index],
                 fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.error);
+                },
               ),
             ),
           );

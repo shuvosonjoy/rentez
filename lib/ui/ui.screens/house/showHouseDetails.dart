@@ -155,12 +155,21 @@ class _HouseDetailsState extends State<HouseDetails> {
   }
 
   Widget _buildImageCarousel() {
-    // Local asset paths
-    final List<String> imagePaths = [
-      'assets/images/houseone.jpg',
-      'assets/images/housetwo.jpg',
-      'assets/images/housethree.jpg',
-    ];
+    // Get image URLs from Firestore
+    List<String> imageUrls = (houseDetails?['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [];
+
+    if (imageUrls.isEmpty) {
+      return Container(
+        height: 240,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: Colors.grey[200],
+        ),
+        child: const Center(
+          child: Icon(Icons.image, size: 60, color: Colors.grey),
+        ),
+      );
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -175,7 +184,7 @@ class _HouseDetailsState extends State<HouseDetails> {
         ],
       ),
       child: CarouselSlider.builder(
-        itemCount: imagePaths.length,
+        itemCount: imageUrls.length,
         options: CarouselOptions(
           height: 240,
           autoPlay: true,
@@ -192,10 +201,22 @@ class _HouseDetailsState extends State<HouseDetails> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(  // Changed to Image.asset
-                imagePaths[index],  // Use local path
+              child: Image.network(
+                imageUrls[index],
                 fit: BoxFit.cover,
-                // Remove network-specific builders
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.error);
+                },
               ),
             ),
           );
@@ -203,6 +224,7 @@ class _HouseDetailsState extends State<HouseDetails> {
       ),
     );
   }
+
   Widget _buildSectionTitle(String title) {
     return Text(
       title,

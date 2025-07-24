@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:rent_ez/ui/ui.screens/splash_screen.dart';
 
 
-class RentEzApp extends StatelessWidget{
-  const RentEzApp({super.key});
+class MySylhet extends StatelessWidget{
+  const MySylhet({super.key});
 
   @override
   Widget build(BuildContext context) {

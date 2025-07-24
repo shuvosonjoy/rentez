@@ -63,8 +63,11 @@ class _GarageDetailsState extends State<GarageDetails> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Image Carousel
                 _buildImageCarousel(),
                 const SizedBox(height: 24),
+
+                // Garage Info Card
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -75,6 +78,7 @@ class _GarageDetailsState extends State<GarageDetails> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Rent & Vehicle Capacity
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -90,6 +94,8 @@ class _GarageDetailsState extends State<GarageDetails> {
                           ],
                         ),
                         const SizedBox(height: 16),
+
+                        // Size & Type
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -108,6 +114,8 @@ class _GarageDetailsState extends State<GarageDetails> {
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                // Location Details
                 _buildSectionTitle('Location Details'),
                 const SizedBox(height: 8),
                 Card(
@@ -124,14 +132,20 @@ class _GarageDetailsState extends State<GarageDetails> {
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                // Description Section
                 _buildSectionTitle('Description'),
                 const SizedBox(height: 8),
                 _buildDescriptionCard(),
                 const SizedBox(height: 24),
+
+                // Owner Information
                 _buildSectionTitle('Owner Information'),
                 const SizedBox(height: 12),
                 _buildOwnerCard(),
                 const SizedBox(height: 20),
+
+                // Contact Button
                 Center(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.phone),
@@ -159,11 +173,21 @@ class _GarageDetailsState extends State<GarageDetails> {
   }
 
   Widget _buildImageCarousel() {
-    final List<String> imagePaths = [
-      'assets/images/garageone.jpg',
-      'assets/images/garagetwo.jpg',
-      'assets/images/garagethree.jpg',
-    ];
+    // Get image URLs from Firestore
+    List<String> imageUrls = (garageDetails?['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [];
+
+    if (imageUrls.isEmpty) {
+      return Container(
+        height: 240,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: Colors.grey[200],
+        ),
+        child: const Center(
+          child: Icon(Icons.local_car_wash, size: 60, color: Colors.grey),
+        ),
+      );
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -178,7 +202,7 @@ class _GarageDetailsState extends State<GarageDetails> {
         ],
       ),
       child: CarouselSlider.builder(
-        itemCount: imagePaths.length,
+        itemCount: imageUrls.length,
         options: CarouselOptions(
           height: 240,
           autoPlay: true,
@@ -195,9 +219,22 @@ class _GarageDetailsState extends State<GarageDetails> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                imagePaths[index],
+              child: Image.network(
+                imageUrls[index],
                 fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.error);
+                },
               ),
             ),
           );
