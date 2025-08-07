@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:rent_ez/ui/global/common/toast.dart';
-import 'package:rent_ez/ui/ui.screens/contact_screen.dart';
-import 'package:rent_ez/ui/ui.screens/feedback_screen.dart';
-import 'package:rent_ez/ui/ui.screens/login_screen.dart';
 import 'package:rent_ez/ui/ui.screens/update_profile_screen.dart';
-import 'package:rent_ez/ui/ui.widgets/background_body.dart';
+import '../global/common/toast.dart';
+import '../ui.widgets/background_body.dart';
+import 'contact_screen.dart';
+import 'feedback_screen.dart';
+import 'login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -49,10 +49,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(10.0),
                   fixedSize: const Size(250, 50),
-                  elevation: 20,
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.lightGreen, width: 3),
+                  elevation: 5,
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.transparent, width: 3),
                   shape: const StadiumBorder(),
                 ),
               ),
@@ -76,10 +76,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(10.0),
                   fixedSize: const Size(250, 50),
-                  elevation: 20,
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.lightGreen, width: 3),
+                  elevation: 5,
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.transparent, width: 3),
                   shape: const StadiumBorder(),
                 ),
               ),
@@ -103,10 +103,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(10.0),
                   fixedSize: const Size(250, 50),
-                  elevation: 20,
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.lightGreen, width: 3),
+                  elevation: 5,
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.transparent, width: 3),
                   shape: const StadiumBorder(),
                 ),
               ),
@@ -132,10 +132,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(10.0),
                   fixedSize: const Size(250, 50),
-                  elevation: 20,
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.lightGreen, width: 3),
+                  elevation: 5,
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.transparent, width: 3),
                   shape: const StadiumBorder(),
                 ),
               ),

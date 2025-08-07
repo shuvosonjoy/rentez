@@ -1,10 +1,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
+import 'dart:ui';
 
 
 class ContactScreen extends StatefulWidget {
-  const ContactScreen ({super.key});
+  const ContactScreen({super.key});
 
   @override
   State<ContactScreen> createState() => _ContactScreenState();
@@ -14,148 +15,118 @@ class _ContactScreenState extends State<ContactScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F6FA),
       appBar: AppBar(
-        title: Text('Contact',style: TextStyle(
-          color: Colors.amber,
-          fontSize:30,
-          fontWeight: FontWeight.w900,
-        ),),
-        elevation: 20,
-        toolbarHeight:80,
-        backgroundColor:Colors.black54,
-
+        title: const Text(
+          'Contact Us',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.black,
+        toolbarHeight: 70,
       ),
       body: BackgroundBody(
         child: SafeArea(
           child: Padding(
-              padding: const EdgeInsets.all(30.0),
-              child:Column(
-                children: [
-                  const SizedBox(height: 100,),
-                  Text('Contact with rentEZ Team',style: TextStyle(
-                    fontSize:20,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black54,
-                  ),),
-
-                  const SizedBox(height:25,),
-                  boxList,
-                ],
-              )
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+            child: Column(
+              children: [
+                Text(
+                  'Get in Touch with\nMySylhet Team',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                _modernGlassCard(),
+              ],
+            ),
           ),
-
         ),
       ),
     );
   }
 
-
-  SizedBox get boxList{
-    return SizedBox(
-      child:ListView.separated(
-        itemCount:1,
-        primary: false,
-        shrinkWrap: true,
-        itemBuilder:(context,index) {
-          return SizedBox(
-            height: 300,
-            //width: 50,
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+  Widget _modernGlassCard() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(25),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 20,
+                offset: Offset(0, 10),
               ),
-              elevation: 30,
-              color: Colors.white,
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(20),
-                      topLeft: Radius.circular(20),
-                    ),
-                  ),
-                  Padding(
-                    padding:EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-
-                        Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.email,color: Colors.deepPurple,),
-                              const SizedBox(width: 10,),
-                              Text('rentEZ@gmail.com',style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blueGrey
-                              ),),
-                            ],
-                          ),
-                        ),
-
-
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.phone,color: Colors.deepPurple,),
-                              const SizedBox(width: 10,),
-                              Text('01782163624',style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blueGrey
-                              ),),
-                            ],
-                          ),
-                        ),
-
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.facebook,color: Colors.deepPurple,),
-                              const SizedBox(width: 10,),
-                              Text('www.facebook.com/rentEZ',style: TextStyle(
-                                fontSize:16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blueGrey,
-                              ),)
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.webhook_sharp,color: Colors.deepPurple,),
-                              const SizedBox(width: 10,),
-                              Text('www.rentEZ.com',style: TextStyle(
-                                fontSize:20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blueGrey,
-                              ),)
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                ],
-              ),
-
-            ),
-          );
-        },
-        separatorBuilder:(_,__) {
-          return const SizedBox(
-            height: 10,
-          );
-        },
+            ],
+          ),
+          padding: const EdgeInsets.all(25),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              contactTile(Icons.email, 'Email', 'MySylhet@gmail.com'),
+              contactTile(Icons.phone_android_rounded, 'Phone', '01782163624'),
+              contactTile(Icons.facebook, 'Facebook', 'facebook.com/mysylhet'),
+              contactTile(Icons.language, 'Website', 'www.mysylhet.com'),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-
+  Widget contactTile(IconData icon, String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(10),
+            child: Icon(icon, color: Colors.deepPurple, size: 24),
+          ),
+          const SizedBox(width: 15),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blueGrey,
+                ),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
 }

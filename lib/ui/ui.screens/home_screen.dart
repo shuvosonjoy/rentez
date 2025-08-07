@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:rent_ez/ui/ui.screens/settings_screen.dart';
 import 'package:rent_ez/ui/ui.screens/shop/shop_screen.dart';
 import 'package:rent_ez/ui/ui.screens/transport/transport_screen.dart';
+import 'package:rent_ez/ui/ui.screens/ui.widgets/image_carousel_widget.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
+
 import 'garage/garage_screen.dart';
 import 'house/house_screen.dart';
 import 'office/office_screen.dart';
@@ -15,48 +17,57 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Feminine color palette with soft pastels
+
   final Map<String, Color> buttonColors = {
-    'HOUSE': const Color(0xFFF9B8D0), // Blush pink
-    'SHOP': const Color(0xFFB8E1FF), // Powder blue
-    'OFFICE': const Color(0xFFFFD6B8), // Peach
-    'GARAGE': const Color(0xFFC5E1A5), // Mint
-    'TRANSPORT': const Color(0xFFE1BEE7), // Lavender
-    'SETTINGS': const Color(0xFFFFF59D), // Pale yellow
+    'HOUSE': const Color(0xFFF9B8D0),
+    'SHOP': const Color(0xFFB8E1FF),
+    'OFFICE': const Color(0xFFFFD6B8),
+    'GARAGE': const Color(0xFFC5E1A5),
+    'TRANSPORT': const Color(0xFFE1BEE7),
+    'SETTINGS': const Color(0xFFFFF59D),
   };
+
+
+  final List<String> carouselImages = [
+    'assets/images/img1.jpg',
+    'assets/images/img2.jpg',
+    'assets/images/img3.jpg',
+    'assets/images/img4.jpg',
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        flexibleSpace: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(25),
-            bottomRight: Radius.circular(25),
-          ),
-          child: Image.asset(
-            'assets/images/mysylhet.jpg',
-            height: 160,
-            fit: BoxFit.cover,
-          ),
-        ),
-        toolbarHeight: 130,
-        elevation: 8,
-        backgroundColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(25),
-            bottomRight: Radius.circular(25),
-          ),
-        ),
-      ),
       body: BackgroundBody(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Elegant Header Section
+
               Padding(
-                padding: const EdgeInsets.only(top: 30, bottom: 20),
+                padding: const EdgeInsets.only(top: 40.0, bottom: 10.0),
+                child: Text(
+                  "MySylhet",
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'PlayfairDisplay',
+                    color: Color(0xFF5A2A83),
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+
+              ImageCarousel(
+                images: carouselImages,
+                height: 180,
+                autoScrollDuration: const Duration(seconds: 5),
+                showArrows: true,
+                autoScroll: true,
+              ),
+
+              // TEXT TITLE
+              Padding(
+                padding: const EdgeInsets.only(top: 15, bottom: 20),
                 child: Column(
                   children: [
                     Text(
@@ -69,17 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Discover beautiful rentals tailored for you',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.blue,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    // Decorative Divider
+
                     Container(
                       height: 4,
                       width: 100,
@@ -94,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Category Grid
+              // CATEGORY GRID
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: GridView.count(
@@ -115,33 +116,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Decorative Footer
-              Padding(
-                padding: const EdgeInsets.only(top: 20, bottom: 30),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.favorite, color: Colors.pink[300], size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Designed with elegance',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.purple[600],
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(Icons.favorite, color: Colors.pink[300], size: 18),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
       ),
     );
   }
+
 
   Widget _buildCategoryButton(String label, VoidCallback onPressed) {
     return InkWell(
@@ -162,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Decorative circle behind icon
+
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(

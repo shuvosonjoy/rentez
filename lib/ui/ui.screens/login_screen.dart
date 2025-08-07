@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:rent_ez/ui/feature/user_auth/firebase_auth_implementation/firebase_auth_services.dart';
-import 'package:rent_ez/ui/global/common/toast.dart';
-import 'package:rent_ez/ui/ui.screens/forgot_password_screen.dart';
-import 'package:rent_ez/ui/ui.screens/home_screen.dart';
 import 'package:rent_ez/ui/ui.screens/sign_up_screen.dart';
-import 'package:rent_ez/ui/ui.widgets/background_body.dart';
+import '../feature/user_auth/firebase_auth_implementation/firebase_auth_services.dart';
+import '../global/common/toast.dart';
+import '../ui.widgets/background_body.dart';
+import 'forgot_password_screen.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       validator: (String? value) {
                         if (value?.trim().isEmpty ?? true) {
-                          return 'Eneter an email';
+                          return 'Enter an email';
                         }
 
                         bool emailValid = RegExp(
@@ -86,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       validator: (String? value) {
                         if (value?.isEmpty ?? true) {
-                          return 'Eneter a Password';
+                          return 'Enter a Password';
                         }
                         if (value!.length < 6) {
                           return 'Enter Password more than 6 letters';
@@ -106,12 +106,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
 
                         },
-                        child:_isSigning ? CircularProgressIndicator(color: Colors.white,): Text(
+                        child:_isSigning ? CircularProgressIndicator(color: Colors.black,): Text(
                           'Sign In',
                           style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),),
                       ),
                     ),
 
@@ -149,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           },
                           child:  Text('Sign Up',style: TextStyle(
-                            color: Colors.green,
+                            color: Colors.deepPurple,
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
 

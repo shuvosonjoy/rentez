@@ -5,6 +5,7 @@ import 'package:rent_ez/ui/global/common/toast.dart';
 import 'package:rent_ez/ui/ui.screens/login_screen.dart';
 import 'package:rent_ez/ui/ui.widgets/background_body.dart';
 
+
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
 
@@ -136,7 +137,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       validator: (String? value) {
                         if (value?.trim().isEmpty ?? true) {
-                          return 'Eneter an email';
+                          return 'Enter an email';
                         }
 
                         bool emailValid = RegExp(
@@ -159,7 +160,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       validator: (String? value) {
                         if (value?.trim().isEmpty ?? true) {
-                          return 'Eneter your First Name';
+                          return 'Enter your First Name';
                         }
                         return null;
                       },
@@ -174,7 +175,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       validator: (String? value) {
                         if (value?.trim().isEmpty ?? true) {
-                          return 'Eneter your Last Name';
+                          return 'Enter your Last Name';
                         }
                         return null;
                       },
@@ -190,7 +191,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       validator: (String? value) {
                         if (value?.trim().isEmpty ?? true) {
-                          return 'Eneter valid Phone Number';
+                          return 'Enter valid Phone Number';
                         }
 
                         bool validPhone =
@@ -215,7 +216,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       validator: (String? value) {
                         if (value?.isEmpty ?? true) {
-                          return 'Eneter a Password';
+                          return 'Enter a Password';
                         }
                         if (value!.length < 6) {
                           return 'Enter Password more than 6 letters';
@@ -241,11 +242,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           }
                         },
                         child: isSigningUp ? CircularProgressIndicator(
-                          color: Colors.white,) : Text(
+                          color: Colors.black,) : Text(
                           'Sign Up',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 25,
+                            color: Colors.black,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -270,7 +271,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           child: Text(
                             'Sign In',
                             style: TextStyle(
-                              color: Colors.green,
+                              color: Colors.deepPurple,
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
                             ),

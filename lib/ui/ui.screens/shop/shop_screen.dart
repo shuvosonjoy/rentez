@@ -136,13 +136,16 @@ class _ShopScreenState extends State<ShopScreen> {
                               ));
                         },
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.all(15.0),
-                          fixedSize: const Size(80, 70),
-                          elevation: 20,
-                          backgroundColor: Colors.amber,
+                          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 10.0),
+                          fixedSize: const Size(90, 65),
+                          elevation: 2,
+                          backgroundColor: Colors.white38,
                           foregroundColor: Colors.black,
-                          side:
-                          const BorderSide(color: Colors.black26, width: 3),
+                          shadowColor: Colors.deepPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                            side: const BorderSide(color: Colors.white70, width: 2),
+                          ),
                         ),
                         child: const Text(
                           'Shop Owner',

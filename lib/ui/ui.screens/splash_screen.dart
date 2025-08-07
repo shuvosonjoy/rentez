@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:rent_ez/ui/ui.screens/login_screen.dart';
-import 'package:rent_ez/ui/ui.widgets/background_body.dart';
+import '../ui.widgets/background_body.dart';
+import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key, required child});
@@ -21,13 +21,13 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (route) => false);
+              (route) => false);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 30), () {
       Navigator.pushReplacementNamed(context, '/login');
     });
 
@@ -35,26 +35,26 @@ class _SplashScreenState extends State<SplashScreen> {
       body: BackgroundBody(
         child: Center(
             child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/images/splash.jpg',
-              width: 400,
-              height: 380,
-              fit: BoxFit.cover,
-            ),
-            const Text(
-              '"Easy Rent Easy Life"',
-              style: TextStyle(
-                height: 2,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-        )),
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/splash.png',
+                  width: 400,
+                  height: 380,
+                  fit: BoxFit.cover,
+                ),
+                const Text(
+                  '"Easy Rent Easy Life"',
+                  style: TextStyle(
+                    height: 2,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            )),
       ),
     );
   }

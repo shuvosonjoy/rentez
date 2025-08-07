@@ -156,11 +156,37 @@ class _OfficeAddDetailsState extends State<OfficeAddDetails> {
         ),
         const SizedBox(height: 10),
 
-        // Image picker button
         ElevatedButton.icon(
           onPressed: pickImages,
-          icon: const Icon(Icons.add_photo_alternate),
-          label: const Text('Select Images'),
+          icon: Container(
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.shade50,  // Soft background for the icon
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.all(8),
+            child: const Icon(
+              Icons.add_photo_alternate,
+              color: Colors.deepPurple,
+              size: 20,
+            ),
+          ),
+          label: const Text(
+            'Select Images',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.deepPurple,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            side: const BorderSide(color: Colors.transparent),
+          ),
         ),
 
         const SizedBox(height: 10),
